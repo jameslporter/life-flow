@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "life-flow",
+    "name": "Life flow",
     "slug": "life-flow",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -21,7 +21,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "server",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -36,7 +36,8 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "baseUrl": "/life-flow"
     }
   }
 }
