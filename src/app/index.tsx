@@ -27,7 +27,12 @@ export default function Today() {
 
   return (
     <>
-      <Stack.Screen options={{ headerRight: () => <HeaderLink href="/tasks" label="All tasks" /> }} />
+      <Stack.Screen
+        options={{
+          headerLeft: () => <HeaderLink href="/reminders" label="Reminders" />,
+          headerRight: () => <HeaderLink href="/tasks" label="All tasks" />,
+        }}
+      />
       <Screen>
         <View style={{ gap: 4, paddingTop: 8 }}>
           <Text style={[styles.kicker, { color: theme.muted }]}>{isToday ? 'Today' : 'Planned for'}</Text>
