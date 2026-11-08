@@ -38,6 +38,33 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2F6B5E"
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "groupIdentifier": "group.com.jameslporter.lifeflow",
+          "widgets": [
+            {
+              "name": "TodayWidget",
+              "displayName": "Today",
+              "description": "Check off tasks for this part of the day.",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium",
+                  "systemLarge"
+                ]
+              },
+              "android": null
+            }
+          ]
+        }
       ]
     ],
     "experiments": {
