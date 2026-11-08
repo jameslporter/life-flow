@@ -20,3 +20,6 @@ export type GlanceProps = {
 
 /** Button target for checking off a task: `toggle:<taskId>`. */
 export const TOGGLE_PREFIX = 'toggle:';
+
+/** GlanceProps for one period, plus when that period starts (Unix ms). */
+export type GlanceEntry = GlanceProps & { startsAt: number };

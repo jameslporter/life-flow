@@ -1,7 +1,7 @@
 import { Button, FieldGroup, Host, Picker, Row, Spacer, Switch, Text } from '@expo/ui';
 import { Alert, Platform } from 'react-native';
 
-import { glanceSupported, syncActivity } from '@/lib/glance';
+import { activityName, glanceSupported, syncActivity } from '@/lib/glance';
 import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
 import { useStore } from '@/lib/store';
 
@@ -31,6 +31,22 @@ export default function Reminders() {
     updateSettings({ reminderEnabled: on });
   };
 
+  // Android shows the task list as a notification, which needs permission first.
+  const canNotify = async () => {
+    if (Platform.OS !== 'android' || (await requestReminderPermission())) return true;
+    notify('Notifications are off', 'Turn on notifications for Life flow in Settings to pin your tasks.');
+    return false;
+  };
+
+  const startNow = async () => {
+    if (await canNotify()) syncActivity(tasks, completions, { start: true });
+  };
+
+  const setStartOnOpen = async (on: boolean) => {
+    if (on && !(await canNotify())) return;
+    updateSettings({ liveActivityOnOpen: on });
+  };
+
   return (
     <Host style={{ flex: 1 }}>
       <FieldGroup>
@@ -55,22 +71,24 @@ export default function Reminders() {
           </FieldGroup.Section>
         ) : (
           <FieldGroup.Section title="Morning reminder">
-            <Text>Morning reminders work in the mobile app. The Live Activity and widget are iPhone only.</Text>
+            <Text>Morning reminders, the widget and the task list on your Lock Screen work in the iOS and Android apps.</Text>
           </FieldGroup.Section>
         )}
 
         {glanceSupported && (
-          <FieldGroup.Section title="Live Activity">
+          <FieldGroup.Section title={activityName}>
             <Switch
               label="Start when I open the app"
               value={settings.liveActivityOnOpen}
-              onValueChange={(v) => updateSettings({ liveActivityOnOpen: v })}
+              onValueChange={setStartOnOpen}
             />
-            <Button label="Start it now" variant="text" onPress={() => syncActivity(tasks, completions, { start: true })} />
+            <Button label="Start it now" variant="text" onPress={startNow} />
             <FieldGroup.SectionFooter>
               <Text>
-                Shows the tasks for the current part of the day on the Lock Screen and Dynamic Island. It
-                also starts when you tap the morning reminder, and ends once everything for today is done.
+                {(Platform.OS === 'ios'
+                  ? 'Shows the tasks for the current part of the day on the Lock Screen and Dynamic Island. '
+                  : 'Pins the tasks for the current part of the day to your notifications so you can check them off there. ') +
+                  'It also starts when you tap the morning reminder, and goes away once everything for today is done.'}
               </Text>
             </FieldGroup.SectionFooter>
           </FieldGroup.Section>
