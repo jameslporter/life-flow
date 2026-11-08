@@ -2,7 +2,7 @@ import { useColorScheme } from 'react-native';
 
 import { Group } from './types';
 
-const light = {
+export const lightTheme = {
   background: '#F6F4EF',
   card: '#FFFFFF',
   text: '#1D1B18',
@@ -14,7 +14,7 @@ const light = {
   groups: { morning: '#D98A1E', work: '#2F6FB3', evening: '#6B4FB3' } as Record<Group, string>,
 };
 
-const dark: typeof light = {
+export const darkTheme: typeof lightTheme = {
   background: '#141311',
   card: '#1F1D1A',
   text: '#F1EEE8',
@@ -26,8 +26,8 @@ const dark: typeof light = {
   groups: { morning: '#F0B357', work: '#7DAEE6', evening: '#AE98EB' },
 };
 
-export type Theme = typeof light;
+export type Theme = typeof lightTheme;
 
 export function useTheme(): Theme {
-  return useColorScheme() === 'dark' ? dark : light;
+  return useColorScheme() === 'dark' ? darkTheme : lightTheme;
 }
