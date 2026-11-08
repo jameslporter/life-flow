@@ -61,11 +61,19 @@
                   "systemLarge"
                 ]
               },
-              "android": null
+              "android": {
+                "minWidth": 180,
+                "minHeight": 110,
+                "targetCellWidth": 3,
+                "targetCellHeight": 2,
+                "resizeMode": "both"
+              }
             }
-          ]
+          ],
+          "enableAndroid": true
         }
-      ]
+      ],
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true,

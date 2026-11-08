@@ -54,10 +54,15 @@ npx eas-cli@latest submit --profile production --platform all
 
 `.claude/settings.json` enables Expo's official Claude Code plugin (`expo@claude-plugins-official`), so Claude sessions in this repo get the Expo skills.
 
-## Morning reminder, Live Activity and widget
+## Morning reminder, Live Activity and widgets
 
 - **Morning reminder** (iOS and Android): turn it on under **Reminders** on the Today screen and pick a time. It's a local notification, sent only on days that have tasks.
-- **Live Activity** (iPhone, iOS 17+): shows the tasks for the current part of the day on the Lock Screen and Dynamic Island. Tap a task to check it off. It starts when you tap the morning reminder (or when you open the app, if that's switched on), and ends once everything for today is done. Built with `expo-widgets` and Expo UI in `src/widgets/TasksActivity.tsx`.
-- **Home screen widget** (iPhone, iOS 17+ for check-off): "Today" in small, medium and large sizes, in `src/widgets/TodayWidget.tsx`. It switches between Morning, Work and Evening on its own; period start times are in `src/lib/periods.ts`.
+- **Live Activity** (iPhone, iOS 17+): shows the tasks for the current part of the day on the Lock Screen and Dynamic Island. Tap a task to check it off. `src/widgets/TasksActivity.tsx`.
+- **Pinned notification** (Android): the Android counterpart, an ongoing notification listing the current tasks with tap-to-check. `src/widgets/AndroidTasksNotification.tsx`.
+- **Home screen widget** "Today": iOS in `src/widgets/TodayWidget.tsx`, Android in `src/widgets/AndroidTodayWidget.tsx`. Tap a task to check it off on the widget.
 
-These need a development or store build (not Expo Go). The widget extension and its App Group (`group.com.jameslporter.lifeflow`) are created by the `expo-widgets` config plugin, and EAS sets up the matching Apple identifiers on the next `eas build`.
+The Live Activity / pinned notification starts when you tap the morning reminder (or whenever the app opens, if switched on) and goes away once everything for today is done. A background task (`src/lib/backgroundRefresh.native.ts`) moves the widget and activity on to the next part of the day about every 30 minutes; the period start times are in `src/lib/periods.ts`.
+
+Everything is drawn with Expo UI through `expo-widgets` (SwiftUI on iOS, Jetpack Compose / Glance on Android). The one piece of native code is `modules/widget-props`, a small local module that reads an Android widget's state so the app can pick up check-offs made on it.
+
+These need a development or store build (not Expo Go). The iOS widget extension and its App Group (`group.com.jameslporter.lifeflow`) are created by the `expo-widgets` config plugin, and EAS sets up the matching Apple identifiers on the next `eas build`.

@@ -1,29 +1,18 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import {
+  applyDone,
+  Completions,
+  DEFAULT_SETTINGS,
+  DoneChange,
+  loadPersisted,
+  Persisted,
+  savePersisted,
+  Settings,
+} from './persist';
 import { ALL_WEEK, Group, Task, WEEKDAYS } from './types';
 
-const STORAGE_KEY = 'life-flow/v1';
-
-type Completions = Record<string, string[]>; // dateKey -> task ids done that day
-
-export type Settings = {
-  /** Send a local notification each morning on days that have tasks. */
-  reminderEnabled: boolean;
-  reminderHour: number;
-  reminderMinute: number;
-  /** Start the Live Activity whenever the app opens, not only from the reminder. */
-  liveActivityOnOpen: boolean;
-};
-
-export const DEFAULT_SETTINGS: Settings = {
-  reminderEnabled: false,
-  reminderHour: 7,
-  reminderMinute: 0,
-  liveActivityOnOpen: false,
-};
-
-type Persisted = { tasks: Task[]; completions: Completions; settings?: Partial<Settings> };
+export type { Settings } from './persist';
 
 type Store = {
   ready: boolean;
@@ -36,7 +25,9 @@ type Store = {
   deleteTask: (id: string) => void;
   toggleDone: (taskId: string, day: string) => void;
   /** Set several completions at once, e.g. check-offs made from the widget. */
-  setDone: (changes: { taskId: string; day: string; done: boolean }[]) => void;
+  setDone: (changes: DoneChange[]) => void;
+  /** Re-read saved data, e.g. after a background refresh changed it. */
+  reload: () => Promise<void>;
   isDone: (taskId: string, day: string) => boolean;
 };
 
@@ -71,13 +62,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      let loaded: Persisted | null = null;
-      try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) loaded = JSON.parse(raw);
-      } catch {
-        // Storage unavailable or corrupt: start fresh.
-      }
+      const loaded = await loadPersisted();
       if (cancelled) return;
       setData(loaded ?? { tasks: seed(), completions: {} });
       setReady(true);
@@ -89,7 +74,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => {});
+    savePersisted(data).catch(() => {});
   }, [data, ready]);
 
   const addTask = useCallback<Store['addTask']>((input) => {
@@ -121,16 +106,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const setDone = useCallback<Store['setDone']>((changes) => {
     if (changes.length === 0) return;
-    setData((d) => {
-      const completions = { ...d.completions };
-      for (const { taskId, day, done } of changes) {
-        const current = completions[day] ?? [];
-        const has = current.includes(taskId);
-        if (done && !has) completions[day] = [...current, taskId];
-        if (!done && has) completions[day] = current.filter((x) => x !== taskId);
-      }
-      return { ...d, completions };
-    });
+    setData((d) => ({ ...d, completions: applyDone(d.completions, changes) }));
+  }, []);
+
+  const reload = useCallback<Store['reload']>(async () => {
+    const loaded = await loadPersisted();
+    if (loaded) setData(loaded);
   }, []);
 
   const updateSettings = useCallback<Store['updateSettings']>((input) => {
@@ -156,9 +137,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       deleteTask,
       toggleDone,
       setDone,
+      reload,
       isDone,
     }),
-    [ready, data, settings, updateSettings, addTask, updateTask, deleteTask, toggleDone, setDone, isDone]
+    [ready, data, settings, updateSettings, addTask, updateTask, deleteTask, toggleDone, setDone, reload, isDone]
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

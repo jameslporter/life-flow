@@ -1,0 +1,71 @@
+import { Checkbox, Column, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
+import { fillMaxWidth, paddingAll } from '@expo/ui/jetpack-compose/modifiers';
+import { createCustomNotification, type CustomNotificationEnvironment } from 'expo-widgets';
+
+import type { GlanceProps } from './types';
+
+/**
+ * Android's counterpart to the iOS Live Activity: a pinned notification with the
+ * tasks for the current period. Tapping a task checks it off in the notification;
+ * the app picks the change up next time it runs.
+ *
+ * This function runs in the widget's own JS runtime: it can only use Expo UI
+ * components and modifiers, and nothing from module scope.
+ */
+function AndroidTasksNotification(props: GlanceProps, environment: CustomNotificationEnvironment) {
+  'widget';
+  const dark = environment.colorScheme === 'dark';
+  const accent = dark ? props.colorDark : props.color;
+  const muted = dark ? '#A39D93' : '#6F6A62';
+  const tasks = props.tasks ?? [];
+  const done = tasks.filter((t) => t.done).length;
+  const left = tasks.filter((t) => !t.done);
+  const summary =
+    tasks.length === 0 ? 'Nothing planned' : left.length === 0 ? 'All done 🎉' : `${done} of ${tasks.length} done`;
+
+  const header = (
+    <Text color={accent} style={{ fontSize: 15, fontWeight: 'bold' }}>
+      {`${props.emoji} ${props.label} · ${summary}`}
+    </Text>
+  );
+
+  return {
+    collapsed: (
+      <Column modifiers={[fillMaxWidth()]}>
+        {header}
+        <Text color={muted} maxLines={1} style={{ fontSize: 13 }}>
+          {left.length > 0 ? `Next: ${left[0].title}` : 'Nice work.'}
+        </Text>
+      </Column>
+    ),
+    expanded: (
+      <Column modifiers={[fillMaxWidth(), paddingAll(4)]}>
+        {header}
+        {left.slice(0, 4).map((task) => (
+          <TextButton
+            key={task.id}
+            // `target` names the press; the TS types for Compose buttons don't list it yet.
+            {...({ target: `toggle:${task.id}` } as object)}
+            modifiers={[fillMaxWidth()]}
+            onClick={() =>
+              ({
+                tasks: tasks.map((t) => (t.id === task.id ? { ...t, done: true } : t)),
+              }) as unknown as void
+            }>
+            <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
+              <Checkbox value={false} colors={{ uncheckedColor: accent }} />
+              <Text maxLines={1} style={{ fontSize: 14 }}>
+                {task.title}
+              </Text>
+            </Row>
+          </TextButton>
+        ))}
+        {left.length > 4 ? (
+          <Text color={muted} style={{ fontSize: 12 }}>{`+${left.length - 4} more`}</Text>
+        ) : null}
+      </Column>
+    ),
+  };
+}
+
+export default createCustomNotification<GlanceProps>('TasksNotification', AndroidTasksNotification);
