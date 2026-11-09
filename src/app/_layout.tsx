@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { GlanceSync } from '@/components/GlanceSync';
 import { StoreProvider } from '@/lib/store';
@@ -8,6 +9,7 @@ import { useTheme } from '@/lib/theme';
 export default function RootLayout() {
   const theme = useTheme();
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <StoreProvider>
       <GlanceSync />
       <StatusBar style="auto" />
@@ -25,5 +27,6 @@ export default function RootLayout() {
         <Stack.Screen name="task/[id]" options={{ presentation: 'modal', title: 'Task' }} />
       </Stack>
     </StoreProvider>
+    </GestureHandlerRootView>
   );
 }
