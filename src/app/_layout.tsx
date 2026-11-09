@@ -21,6 +21,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ title: 'Life flow' }} />
         <Stack.Screen name="tasks" options={{ title: 'All tasks' }} />
         <Stack.Screen name="reminders" options={{ title: 'Reminders' }} />
+        <Stack.Screen name="privacy" options={{ title: 'Privacy policy' }} />
         <Stack.Screen name="task/[id]" options={{ presentation: 'modal', title: 'Task' }} />
       </Stack>
     </StoreProvider>
