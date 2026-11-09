@@ -26,8 +26,10 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npx expo export --platform web
-      # GitHub Pages has no SPA fallback: serve the app for unknown paths so deep links work.
-      - run: cp dist/index.html dist/404.html && touch dist/.nojekyll
+      # Static output writes one HTML file per route. GitHub Pages serves 404.html for any other
+      # path, such as a saved task's link; the app still boots there and shows the right screen.
+      # .nojekyll keeps Pages from hiding the _expo folder.
+      - run: cp dist/+not-found.html dist/404.html && touch dist/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
