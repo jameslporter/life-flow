@@ -1,6 +1,6 @@
 # Builds production iOS and Android apps on EAS and submits them to
 # TestFlight and the Google Play internal testing track.
-# Run it from the Workflows tab on expo.dev (or `npx eas-cli workflow:run release.yml`).
+# Run it from the Workflows tab on expo.dev (or `bunx eas-cli workflow:run release.yml`).
 # It has no automatic trigger, so it only runs when started by hand.
 name: Release to stores
 
