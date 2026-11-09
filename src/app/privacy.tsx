@@ -12,14 +12,15 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: 'The short version',
     body: [
-      'Life flow keeps everything on your device. There are no accounts, no servers and no tracking. We never collect, see, sell or share your data.',
+      'Life flow keeps your data on your device (and in your phone’s own backup, if you have it turned on). There are no accounts, no servers and no tracking. We never collect, see, sell or share your data.',
     ],
   },
   {
     title: 'What the app stores',
     body: [
-      'The tasks you create, the days you check them off and your settings (such as your reminder time) are saved only on your device, in the app’s own storage. On the web version they are saved in your browser’s local storage.',
-      'This data never leaves your device. Life flow has no backend: it does not send your data to us or to anyone else.',
+      'The tasks you create, the days you check them off and your settings (such as your reminder time) are saved on your device, in the app’s own storage. On the web version they are saved in your browser’s local storage.',
+      'Life flow has no backend: it never sends your data to us or to anyone else.',
+      'Backups: so you don’t lose your tasks when you change or reset your phone, the app lets your phone’s own backup include its data. On iPhone this is iCloud Backup or a backup to your computer; on Android it is your Google account backup or a device-to-device transfer. These backups are made and stored by Apple or Google under your account and their privacy terms, only if you have backup turned on. We never have access to them. You can turn backup off in your device’s settings.',
     ],
   },
   {
@@ -47,7 +48,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
     title: 'Keeping and deleting your data',
     body: [
       'Your data stays on your device until you delete it. You can delete individual tasks in the app, or remove everything by uninstalling the app. On the web, clearing this site’s data in your browser removes it.',
-      'Because we hold no copy of your data, we can’t recover it for you, and there is nothing for us to delete on request.',
+      'If your phone’s backup is on, a copy may also be kept in that backup until you delete it through Apple or Google. Because we hold no copy of your data, we can’t recover it for you, and there is nothing for us to delete on request.',
     ],
   },
   {
