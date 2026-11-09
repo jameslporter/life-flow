@@ -11,7 +11,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.hackerswagger.lifeflow",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "RCTAsyncStorageExcludeFromBackup": false
       }
     },
     "android": {
@@ -22,6 +23,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "allowBackup": true,
       "package": "com.hackerswagger.lifeflow"
     },
     "web": {
