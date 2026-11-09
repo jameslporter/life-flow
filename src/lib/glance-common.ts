@@ -45,10 +45,18 @@ export function glanceEntries(tasks: Task[], completions: Completions, now = new
   return entries;
 }
 
-/** True when every task due today is checked off. */
-export function allDoneToday(tasks: Task[], completions: Completions, now = new Date()) {
-  const done = completions[dateKey(now)] ?? [];
-  return tasks.filter((t) => t.days.includes(now.getDay())).every((t) => done.includes(t.id));
+/**
+ * What the Live Activity / pinned notification shows: the current period, or the next
+ * one today that still has tasks to do, with the periods after it in `later`. Null once
+ * nothing is left from now until the end of the day.
+ * Keep in step with `advance` in modules/activity-checks/ios/ActivityChecks.swift.
+ */
+export function activityGlance(tasks: Task[], completions: Completions, now = new Date()): GlanceProps | null {
+  const open = ORDER.slice(ORDER.indexOf(periodAt(now)))
+    .map((period) => propsFor(tasks, completions, now, period))
+    .filter((props) => props.tasks.some((t) => !t.done));
+  if (open.length === 0) return null;
+  return { ...open[0], later: open.slice(1) };
 }
 
 // What we last sent to the widget and the activity, as `${day}|${taskId}` -> done.
