@@ -78,6 +78,34 @@
     "experiments": {
       "typedRoutes": true,
       "baseUrl": "/life-flow"
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "ExpoWidgetsTarget",
+                  "bundleIdentifier": "com.hackerswagger.lifeflow.ExpoWidgetsTarget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.hackerswagger.lifeflow"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "0c8201af-751c-4551-81f7-5bf33d50ddb2"
+      }
+    },
+    "owner": "jameslporter"
   }
 }
