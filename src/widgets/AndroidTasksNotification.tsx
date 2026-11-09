@@ -17,6 +17,7 @@ function AndroidTasksNotification(props: GlanceProps, environment: CustomNotific
   const dark = environment.colorScheme === 'dark';
   const accent = dark ? props.colorDark : props.color;
   const muted = dark ? '#A39D93' : '#6F6A62';
+  const text = dark ? '#F1EEE8' : '#1D1B18';
   const tasks = props.tasks ?? [];
   const done = tasks.filter((t) => t.done).length;
   const left = tasks.filter((t) => !t.done);
@@ -54,7 +55,7 @@ function AndroidTasksNotification(props: GlanceProps, environment: CustomNotific
             }>
             <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
               <Checkbox value={false} colors={{ uncheckedColor: accent }} />
-              <Text maxLines={1} style={{ fontSize: 14 }}>
+              <Text color={text} maxLines={1} style={{ fontSize: 14 }}>
                 {task.title}
               </Text>
             </Row>

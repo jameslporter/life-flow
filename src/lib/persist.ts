@@ -25,6 +25,9 @@ export const DEFAULT_SETTINGS: Settings = {
   liveActivityOnOpen: false,
 };
 
+/** A new install starts with the morning reminder and the Live Activity / pinned notification on. */
+export const NEW_USER_SETTINGS: Partial<Settings> = { reminderEnabled: true, liveActivityOnOpen: true };
+
 export type Persisted = { tasks: Task[]; completions: Completions; settings?: Partial<Settings> };
 
 /** Reads the saved data, or null when there is none or it can't be read. */

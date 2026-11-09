@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { registerBackgroundRefresh } from '@/lib/backgroundRefresh';
 import { dateKey } from '@/lib/dates';
 import { glanceChanges, onGlancePress, pushWidget, syncActivity } from '@/lib/glance';
-import { onMorningReminderOpened, scheduleMorningReminders } from '@/lib/reminders';
+import { onMorningReminderOpened, requestReminderPermission, scheduleMorningReminders } from '@/lib/reminders';
 import { useStore } from '@/lib/store';
 
 /**
@@ -18,12 +18,21 @@ export function GlanceSync() {
   latest.current = store;
   // Don't push to the widget until we've picked up check-offs made on it.
   const [caughtUp, setCaughtUp] = useState(false);
+  // Whether the app may post notifications, asked for once per launch.
+  const [canNotify, setCanNotify] = useState(false);
 
   // Pull in check-offs made on the widget or activity while the app wasn't open.
   useEffect(() => {
     if (!ready) return;
     registerBackgroundRefresh();
     const catchUp = async (fromBackground: boolean) => {
+      const s0 = latest.current;
+      let allowed = false;
+      if (s0.settings.reminderEnabled || s0.settings.liveActivityOnOpen) {
+        // Asks only the first time; after that the OS answers without a prompt.
+        allowed = await requestReminderPermission().catch(() => false);
+        setCanNotify(allowed);
+      }
       try {
         // A background refresh may have saved check-offs while we were away.
         if (fromBackground) await reload();
@@ -33,7 +42,10 @@ export function GlanceSync() {
       }
       setCaughtUp(true);
       const s = latest.current;
-      if (s.settings.liveActivityOnOpen) syncActivity(s.tasks, s.completions, { start: true });
+      // Android's pinned task list is a notification, so it needs the permission.
+      if (s.settings.liveActivityOnOpen && (Platform.OS !== 'android' || allowed)) {
+        syncActivity(s.tasks, s.completions, { start: true });
+      }
     };
     catchUp(false);
     let previous = AppState.currentState;
@@ -60,7 +72,7 @@ export function GlanceSync() {
     scheduleMorningReminders(tasks, settings).catch((e) =>
       console.warn('[life-flow] Scheduling reminders failed', e)
     );
-  }, [ready, tasks, settings]);
+  }, [ready, tasks, settings, canNotify]);
 
   // Tapping the morning reminder starts the Live Activity / pinned notification.
   useEffect(() => {
