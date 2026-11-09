@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jameslporter.lifeflow",
+      "bundleIdentifier": "com.hackerswagger.lifeflow",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -22,7 +22,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.jameslporter.lifeflow"
+      "package": "com.hackerswagger.lifeflow"
     },
     "web": {
       "bundler": "metro",
@@ -48,7 +48,7 @@
       [
         "expo-widgets",
         {
-          "groupIdentifier": "group.com.jameslporter.lifeflow",
+          "groupIdentifier": "group.com.hackerswagger.lifeflow",
           "widgets": [
             {
               "name": "TodayWidget",
