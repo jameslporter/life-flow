@@ -1,0 +1,41 @@
+# Sends the latest finished EAS build to the store(s), using the "production" submit profile.
+# iOS goes to App Store Connect (TestFlight), Android to the Google Play internal testing track.
+# Use this when a build is already done; to build and submit in one go, run an EAS build
+# workflow with "submit" ticked. Needs the EXPO_TOKEN repository secret.
+name: EAS submit to stores
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Which store
+        type: choice
+        options: [all, ios, android]
+        default: all
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      - name: Submit latest build
+        run: >
+          eas submit
+          --platform ${{ inputs.platform }}
+          --profile production
+          --latest
+          --non-interactive
+          --wait
