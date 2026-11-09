@@ -43,6 +43,19 @@ One-time setup:
 3. iOS: an Apple Developer account. Run `npx eas-cli@latest build -p ios --profile production` once to set up signing, then `npx eas-cli@latest submit -p ios` to create the App Store Connect app and API key.
 4. Android: create the app in Google Play Console, upload the first build by hand (Google requires that), and add a Google service account key to EAS (`npx eas-cli@latest credentials -p android`).
 
+### GitHub Actions
+
+Three workflows in `.github/workflows/` run by hand from the repo's Actions tab ("Run workflow"):
+
+- **EAS build iOS** (`eas-build-ios.yml`) and **EAS build Android** (`eas-build-android.yml`): pick a profile (`production`, `preview` or `development`). Tick **submit** on a production build to send it to TestFlight or the Play internal track as soon as EAS finishes it. The job hands the build to EAS and ends right away; follow it on expo.dev.
+- **EAS submit to stores** (`eas-submit.yml`): sends the latest finished build for iOS, Android or both.
+
+Secrets and credentials:
+
+- **`EXPO_TOKEN`** (GitHub repo secret, the only one needed). Create an access token at expo.dev → Account settings → Access tokens, then add it in GitHub under Settings → Secrets and variables → Actions → New repository secret.
+- **Apple and Google credentials stay on EAS, not in GitHub.** The workflows run non-interactively, so set them up once from your machine first (steps 3 and 4 above): iOS signing and an App Store Connect API key (`npx eas-cli@latest credentials -p ios`), and the Google Play service account key (`npx eas-cli@latest credentials -p android`).
+- **`ascAppId`** for iOS submits: non-interactive submits need the App Store Connect app id. Find it in App Store Connect → the app → App Information → Apple ID, and add it to `eas.json` under `submit.production.ios.ascAppId`.
+
 Manual commands:
 
 ```bash
