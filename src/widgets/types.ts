@@ -16,6 +16,16 @@ export type GlanceProps = {
   tasks: GlanceTask[];
   /** Ends of the period, as a Unix time in ms. */
   endsAt: number;
+  /**
+   * Live Activity / pinned notification only: the rest of today's periods that still
+   * have tasks, in order. Shown next once every task in this period is checked off.
+   */
+  later?: Omit<GlanceProps, 'later' | 'checked'>[];
+  /**
+   * Android pinned notification only: ids of tasks checked off on it, kept even after
+   * it moves on to the next period, so the app can pick them all up.
+   */
+  checked?: string[];
 };
 
 /** Button target for checking off a task: `toggle:<taskId>`. */

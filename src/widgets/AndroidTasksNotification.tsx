@@ -48,11 +48,16 @@ function AndroidTasksNotification(props: GlanceProps, environment: CustomNotific
             // `target` names the press; the TS types for Compose buttons don't list it yet.
             {...({ target: `toggle:${task.id}` } as object)}
             modifiers={[fillMaxWidth()]}
-            onClick={() =>
-              ({
-                tasks: tasks.map((t) => (t.id === task.id ? { ...t, done: true } : t)),
-              }) as unknown as void
-            }>
+            onClick={() => {
+              // Check the task off; once this period is done, show the next one with tasks left.
+              const mark = (list: typeof tasks) => list.map((t) => (t.id === task.id ? { ...t, done: true } : t));
+              let next = { ...props, checked: [...(props.checked ?? []), task.id], tasks: mark(tasks), later: (props.later ?? []).map((p) => ({ ...p, tasks: mark(p.tasks) })) };
+              while (next.tasks.every((t) => t.done) && next.later.length > 0) {
+                const [upcoming, ...rest] = next.later;
+                next = { ...next, ...upcoming, later: rest };
+              }
+              return next as unknown as void;
+            }}>
             <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
               <Checkbox value={false} colors={{ uncheckedColor: accent }} />
               <Text color={text} maxLines={1} style={{ fontSize: 14 }}>
