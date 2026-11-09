@@ -17,15 +17,20 @@ function TasksActivity(props: GlanceProps, environment: LiveActivityEnvironment)
   const tasks = props.tasks ?? [];
   const done = tasks.filter((t) => t.done).length;
   const left = tasks.filter((t) => !t.done);
-  const accent = props.colorDark ?? 'orange';
+  // Lock Screen banners follow the phone's appearance, so match it instead of
+  // forcing white text, and use the system's text colors so they stay readable.
+  const dark = environment.colorScheme === 'dark';
+  const accent = (dark ? props.colorDark : props.color) ?? 'orange';
+  const primary = { type: 'hierarchical', style: 'primary' } as const;
+  const secondary = { type: 'hierarchical', style: 'secondary' } as const;
   const summary = tasks.length === 0 ? 'Nothing planned' : left.length === 0 ? 'All done 🎉' : `${done}/${tasks.length}`;
 
   const rows = (limit: number) =>
     left.slice(0, limit).map((task) => (
-      <Button key={task.id} target={`toggle:${task.id}`} modifiers={[buttonStyle('plain')]}>
+      <Button key={task.id} target={`toggle:${task.id}`} modifiers={[buttonStyle('plain'), foregroundStyle(primary)]}>
         <HStack spacing={8}>
           <Image systemName="circle" size={18} color={accent} />
-          <Text modifiers={[font({ size: 15 }), foregroundStyle('white')]}>{task.title}</Text>
+          <Text modifiers={[font({ size: 15 }), foregroundStyle(primary)]}>{task.title}</Text>
           <Spacer />
         </HStack>
       </Button>
@@ -37,7 +42,7 @@ function TasksActivity(props: GlanceProps, environment: LiveActivityEnvironment)
         {`${props.emoji ?? ''} ${props.label ?? 'Today'}`}
       </Text>
       <Spacer />
-      <Text modifiers={[font({ size: 13, weight: 'semibold' }), foregroundStyle('gray')]}>{summary}</Text>
+      <Text modifiers={[font({ size: 13, weight: 'semibold' }), foregroundStyle(secondary)]}>{summary}</Text>
     </HStack>
   );
 
@@ -46,11 +51,11 @@ function TasksActivity(props: GlanceProps, environment: LiveActivityEnvironment)
       <VStack
         alignment="leading"
         spacing={8}
-        modifiers={[padding({ all: 14 }), activityBackgroundTint('#1D1B18')]}>
+        modifiers={[padding({ all: 14 }), activityBackgroundTint(dark ? '#1F1D1A' : '#FFFFFF')]}>
         {header}
         {rows(environment.isActivityFullscreen ? 8 : 4)}
         {left.length > 4 && !environment.isActivityFullscreen ? (
-          <Text modifiers={[font({ size: 12 }), foregroundStyle('gray')]}>{`+${left.length - 4} more`}</Text>
+          <Text modifiers={[font({ size: 12 }), foregroundStyle(secondary)]}>{`+${left.length - 4} more`}</Text>
         ) : null}
       </VStack>
     ),
@@ -69,7 +74,7 @@ function TasksActivity(props: GlanceProps, environment: LiveActivityEnvironment)
       </Text>
     ),
     expandedTrailing: (
-      <Text modifiers={[font({ size: 13, weight: 'semibold' }), foregroundStyle('gray')]}>{summary}</Text>
+      <Text modifiers={[font({ size: 13, weight: 'semibold' }), foregroundStyle(secondary)]}>{summary}</Text>
     ),
     expandedBottom: <VStack alignment="leading" spacing={6}>{rows(3)}</VStack>,
   };

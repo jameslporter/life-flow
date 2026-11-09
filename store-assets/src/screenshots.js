@@ -76,5 +76,6 @@ async function capture(browser, name, route, scheme, scroll = 0) {
   await capture(browser, '2-all-tasks', '/tasks', 'light');
   await capture(browser, '3-edit-task', '/task/w2', 'light');
   await capture(browser, '4-today-evening', '/', 'light', 700);
+  await capture(browser, '5-today-dark', '/', 'dark');
   await browser.close();
 })();

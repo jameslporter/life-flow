@@ -6,6 +6,7 @@ import {
   DEFAULT_SETTINGS,
   DoneChange,
   loadPersisted,
+  NEW_USER_SETTINGS,
   Persisted,
   savePersisted,
   Settings,
@@ -64,7 +65,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       const loaded = await loadPersisted();
       if (cancelled) return;
-      setData(loaded ?? { tasks: seed(), completions: {} });
+      setData(loaded ?? { tasks: seed(), completions: {}, settings: NEW_USER_SETTINGS });
       setReady(true);
     })();
     return () => {

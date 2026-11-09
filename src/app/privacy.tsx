@@ -32,8 +32,8 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: 'Permissions',
     body: [
-      'Notifications: if you turn on the morning reminder, Life flow asks to send notifications. Reminders are scheduled on your device as local notifications; nothing is sent through a push server. On Android the same permission is used to pin the current part of your day’s tasks to your notifications so you can check them off there.',
-      'Live Activity (iPhone): if you start it, your tasks for the current part of the day appear on the Lock Screen and in the Dynamic Island. This is shown by your device and is not sent anywhere.',
+      'Notifications: when you first open the app, Life flow asks to send notifications for the morning reminder, which is on by default. Reminders are scheduled on your device as local notifications; nothing is sent through a push server. On Android the same permission is used to pin the current part of your day’s tasks to your notifications so you can check them off there.',
+      'Live Activity (iPhone): when it is on (the default), your tasks for the current part of the day appear on the Lock Screen and in the Dynamic Island. This is shown by your device and is not sent anywhere.',
       'Home screen widget: the widget shows your tasks for the current part of the day. To do this the app shares your task list with its own widget through storage on your device.',
       'Background refresh: the app may run briefly in the background so the widget and reminders stay up to date. This happens on your device and makes no network requests.',
       'You can turn any of these off at any time in the app’s Reminders screen or in your device’s settings.',
