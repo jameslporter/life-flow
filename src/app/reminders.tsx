@@ -1,4 +1,5 @@
 import { Button, FieldGroup, Host, Picker, Row, Spacer, Switch, Text } from '@expo/ui';
+import { router } from 'expo-router';
 import { Alert, Platform } from 'react-native';
 
 import { activityName, glanceSupported, syncActivity } from '@/lib/glance';
@@ -93,6 +94,13 @@ export default function Reminders() {
             </FieldGroup.SectionFooter>
           </FieldGroup.Section>
         )}
+
+        <FieldGroup.Section title="About">
+          <Button label="Privacy policy" variant="text" onPress={() => router.push('/privacy')} />
+          <FieldGroup.SectionFooter>
+            <Text>Your tasks and settings stay on this device. Life flow has no accounts, servers or tracking.</Text>
+          </FieldGroup.SectionFooter>
+        </FieldGroup.Section>
       </FieldGroup>
     </Host>
   );

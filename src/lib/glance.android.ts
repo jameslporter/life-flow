@@ -5,7 +5,7 @@ import AndroidTasksNotification from '@/widgets/AndroidTasksNotification';
 import AndroidTodayWidget, { type AndroidWidgetProps } from '@/widgets/AndroidTodayWidget';
 import type { GlanceProps } from '@/widgets/types';
 
-import { allDoneToday, changesSincePush, currentGlance, glanceEntries, recordPushed } from './glance-common';
+import { activityGlance, changesSincePush, glanceEntries, recordPushed } from './glance-common';
 import type { Completions, DoneChange } from './persist';
 import type { Task } from './types';
 
@@ -25,14 +25,20 @@ export async function pushWidget(tasks: Task[], completions: Completions, now = 
 /** Check-offs made on the widget or the pinned notification since the last push. */
 export async function glanceChanges(): Promise<DoneChange[]> {
   const propsList: Partial<GlanceProps>[] = [];
+  const checked: DoneChange[] = [];
   propsList.push(...(getWidgetProps<AndroidWidgetProps>('TodayWidget')?.entries ?? []));
   try {
     const active = await AndroidTasksNotification.get(NOTIFICATION_ID);
-    if (active) propsList.push(await active.getProps());
+    if (active) {
+      const props = await active.getProps();
+      propsList.push(props);
+      // Tasks from earlier periods are no longer in `tasks` once it has moved on.
+      checked.push(...(props.checked ?? []).map((taskId) => ({ taskId, day: props.day!, done: true })));
+    }
   } catch {
     // The notification was dismissed in the meantime.
   }
-  return changesSincePush(propsList);
+  return [...(await changesSincePush(propsList)), ...checked];
 }
 
 async function ensureChannel() {
@@ -46,20 +52,20 @@ async function ensureChannel() {
 }
 
 /**
- * Keeps the pinned notification in step with the current period. Posts one only
- * when `start` is set and something is left to do; removes it once every task due today is done.
+ * Keeps the pinned notification in step with the day. It shows the current period, or
+ * the next one with tasks left once that's done, and goes away when nothing is left today.
+ * Posts one only when `start` is set and something is left to do.
  */
 export async function syncActivity(tasks: Task[], completions: Completions, { start = false } = {}) {
   const now = new Date();
-  const props = currentGlance(tasks, completions, now);
-  const allDone = allDoneToday(tasks, completions, now);
+  const props = activityGlance(tasks, completions, now);
 
   try {
     const existing = await AndroidTasksNotification.get(NOTIFICATION_ID);
     if (existing) {
-      if (allDone) await existing.cancel();
+      if (!props) await existing.cancel();
       else await existing.update(props);
-    } else if (start && !allDone) {
+    } else if (start && props) {
       await ensureChannel();
       await AndroidTasksNotification.post(props, {
         id: NOTIFICATION_ID,

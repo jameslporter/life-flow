@@ -1,10 +1,12 @@
 import { addUserInteractionListener, type LiveActivity } from 'expo-widgets';
 
+import { takePendingActivityChecks } from '../../modules/activity-checks';
+
 import TasksActivity from '@/widgets/TasksActivity';
 import TodayWidget from '@/widgets/TodayWidget';
 import { GlanceProps, TOGGLE_PREFIX } from '@/widgets/types';
 
-import { allDoneToday, changesSincePush, currentGlance, glanceEntries, recordPushed } from './glance-common';
+import { activityGlance, changesSincePush, currentGlance, glanceEntries, recordPushed } from './glance-common';
 import type { Completions, DoneChange } from './persist';
 import type { Task } from './types';
 
@@ -20,10 +22,13 @@ export async function pushWidget(tasks: Task[], completions: Completions, now = 
   await recordPushed(tasks, completions, now);
 }
 
-/** Check-offs made on the widget since the last push. (Live Activity presses arrive as events.) */
+/** Check-offs made on the widget or the Live Activity since the last push. */
 export async function glanceChanges(): Promise<DoneChange[]> {
   const timeline = await TodayWidget.getTimeline();
-  return changesSincePush(timeline.map((e) => e.props));
+  const fromWidget = await changesSincePush(timeline.map((e) => e.props));
+  // Recorded natively, so presses made while the app wasn't running aren't lost.
+  const fromActivity = takePendingActivityChecks().map((c) => ({ ...c, done: true }));
+  return [...fromWidget, ...fromActivity];
 }
 
 function activity(): LiveActivity<GlanceProps> | undefined {
@@ -31,22 +36,21 @@ function activity(): LiveActivity<GlanceProps> | undefined {
 }
 
 /**
- * Keeps the Live Activity in step with the current period. Starts one only when
- * `start` is set and something is left to do; ends it once every task due today is done.
+ * Keeps the Live Activity in step with the day. It shows the current period, or the
+ * next one with tasks left once that's done, and ends when nothing is left today.
+ * Starts one only when `start` is set and something is left to do.
  */
 export async function syncActivity(tasks: Task[], completions: Completions, { start = false } = {}) {
   const now = new Date();
-  const props = currentGlance(tasks, completions, now);
-  const allDone = allDoneToday(tasks, completions, now);
-  const staleDate = new Date(props.endsAt);
+  const props = activityGlance(tasks, completions, now);
 
   const existing = activity();
   try {
     if (existing) {
-      if (allDone) await existing.end('default', props);
-      else await existing.update(props, staleDate);
-    } else if (start && !allDone) {
-      TasksActivity.start(props, ACTIVITY_URL, staleDate);
+      if (!props) await existing.end('default', currentGlance(tasks, completions, now));
+      else await existing.update(props, new Date(props.endsAt));
+    } else if (start && props) {
+      TasksActivity.start(props, ACTIVITY_URL, new Date(props.endsAt));
     }
   } catch (e) {
     // Live Activities can be turned off in Settings, or unsupported on this device.
@@ -58,8 +62,10 @@ export async function syncActivity(tasks: Task[], completions: Completions, { st
 export function onGlancePress(handlers: { onCheck: (taskId: string) => void; onChanged: () => void }) {
   const sub = addUserInteractionListener((e) => {
     if (e.source === 'TasksActivity' && e.target?.startsWith(TOGGLE_PREFIX)) {
-      // Live Activity buttons don't change its props, so the app does the check-off.
+      // The native side has already updated the activity and recorded the check-off.
+      // Apply this one now, then any recorded while the app wasn't running.
       handlers.onCheck(e.target.slice(TOGGLE_PREFIX.length));
+      handlers.onChanged();
     } else {
       handlers.onChanged();
     }

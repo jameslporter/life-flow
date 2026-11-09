@@ -1,4 +1,4 @@
-import { useColorScheme } from 'react-native';
+import { useColorScheme } from './colorScheme';
 
 import { Group } from './types';
 

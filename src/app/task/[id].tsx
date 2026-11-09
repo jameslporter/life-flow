@@ -12,6 +12,11 @@ function close() {
   else router.replace('/');
 }
 
+/** Pre-render the "new task" page for the web build. Saved tasks only exist on the device. */
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  return [{ id: 'new' }];
+}
+
 export default function EditTask() {
   const theme = useTheme();
   const params = useLocalSearchParams<{ id: string; group?: string }>();

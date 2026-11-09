@@ -67,12 +67,12 @@ bunx eas-cli@latest submit --profile production --platform all
 
 ## Morning reminder, Live Activity and widgets
 
-- **Morning reminder** (iOS and Android): turn it on under **Reminders** on the Today screen and pick a time. It's a local notification, sent only on days that have tasks.
+- **Morning reminder** (iOS and Android): on by default for new installs (the app asks for notification permission on first launch); change it under **Reminders** on the Today screen and pick a time. It's a local notification, sent only on days that have tasks.
 - **Live Activity** (iPhone, iOS 17+): shows the tasks for the current part of the day on the Lock Screen and Dynamic Island. Tap a task to check it off. `src/widgets/TasksActivity.tsx`.
 - **Pinned notification** (Android): the Android counterpart, an ongoing notification listing the current tasks with tap-to-check. `src/widgets/AndroidTasksNotification.tsx`.
 - **Home screen widget** "Today": iOS in `src/widgets/TodayWidget.tsx`, Android in `src/widgets/AndroidTodayWidget.tsx`. Tap a task to check it off on the widget.
 
-The Live Activity / pinned notification starts when you tap the morning reminder (or whenever the app opens, if switched on) and goes away once everything for today is done. A background task (`src/lib/backgroundRefresh.native.ts`) moves the widget and activity on to the next part of the day about every 30 minutes; the period start times are in `src/lib/periods.ts`.
+The Live Activity / pinned notification starts when you tap the morning reminder (or whenever the app opens, which is on by default for new installs). Checking off the last task in a part of the day moves it on to the next part that still has tasks, and it goes away once nothing is left for today. On iOS, presses on the Live Activity are handled natively by `modules/activity-checks` (it updates the activity and records the check-off for the app), because the app's JavaScript may not be running when the button is pressed. A background task (`src/lib/backgroundRefresh.native.ts`) moves the widget and activity on to the next part of the day about every 30 minutes; the period start times are in `src/lib/periods.ts`.
 
 Everything is drawn with Expo UI through `expo-widgets` (SwiftUI on iOS, Jetpack Compose / Glance on Android). The one piece of native code is `modules/widget-props`, a small local module that reads an Android widget's state so the app can pick up check-offs made on it.
 
