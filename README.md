@@ -55,7 +55,7 @@ EAS is already set up for this project: `app.json` has `extra.eas.projectId`/`ow
 
 ### GitHub Actions
 
-Three workflows in `.github/workflows/` run by hand from the repo's Actions tab ("Run workflow"):
+These workflows in `.github/workflows/` run by hand from the repo's Actions tab ("Run workflow"):
 
 - **EAS build iOS** (`eas-build-ios.yml`) and **EAS build Android** (`eas-build-android.yml`): pick a profile (`production`, `preview` or `development`). Tick **submit** on a production build to send it to TestFlight or the Play internal track as soon as EAS finishes it. The job hands the build to EAS and ends right away; follow it on expo.dev.
 - **EAS submit to stores** (`eas-submit.yml`): sends the latest finished build for iOS, Android or both.
@@ -73,6 +73,16 @@ bunx eas-cli@latest build --profile development --platform android   # cloud dev
 bunx eas-cli@latest build --profile production --platform all
 bunx eas-cli@latest submit --profile production --platform all
 ```
+
+### Over-the-air updates (EAS Update)
+
+`expo-updates` lets a store build download new JavaScript and assets without going through app review. Each build profile has a matching channel in `eas.json` (`development`, `preview`, `production`).
+
+- **EAS update** (`eas-update.yml`) runs on every push to `main` (skipping Markdown and store-asset-only changes) and publishes to the `production` channel. You can also start it by hand from the Actions tab. It uses the same `EXPO_TOKEN` secret.
+- Updates only reach builds with a matching runtime version. `app.json` uses the `fingerprint` policy, so adding a native package, changing a config plugin or touching `modules/` changes the runtime: ship that as a new store build. JS-only changes go out as updates.
+- Builds made before `expo-updates` was added can't receive updates. Make one new production build to start.
+
+Publish by hand: `bunx eas-cli update --channel preview --message "Try this"` (use any channel).
 
 ## Claude Code
 

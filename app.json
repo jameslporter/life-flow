@@ -3,6 +3,12 @@
     "name": "Life flow",
     "slug": "life-flow",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0c8201af-751c-4551-81f7-5bf33d50ddb2"
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "lifeflow",
