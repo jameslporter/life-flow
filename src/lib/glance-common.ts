@@ -1,12 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { GlanceEntry, GlanceProps } from '@/widgets/types';
+import type { GlanceEntry, GlanceProps, GlanceStyle } from '@/widgets/types';
 
 import { addDays, dateKey } from './dates';
 import { periodAt, periodEnd, periodStart } from './periods';
 import type { Completions, DoneChange } from './persist';
 import { darkTheme, lightTheme } from './theme';
 import { GROUPS, Group, Task } from './types';
+
+/** The look every widget surface shares. Change sizes here to change them everywhere. */
+export const GLANCE_STYLE: GlanceStyle = {
+  light: { surface: lightTheme.card, text: lightTheme.text, muted: lightTheme.muted },
+  dark: { surface: darkTheme.card, text: darkTheme.text, muted: darkTheme.muted },
+  size: { header: 15, row: 17, mark: 20, rowPad: 3, note: 13, small: 12 },
+};
 
 const PUSHED_KEY = 'life-flow/widget-pushed';
 const ORDER: Group[] = ['morning', 'work', 'evening'];
@@ -30,18 +37,19 @@ export function propsFor(tasks: Task[], completions: Completions, day: Date, per
 }
 
 export function currentGlance(tasks: Task[], completions: Completions, now = new Date()): GlanceProps {
-  return propsFor(tasks, completions, now, periodAt(now));
+  return { ...propsFor(tasks, completions, now, periodAt(now)), style: GLANCE_STYLE };
 }
 
 /** The current period, the rest of today's periods, and tomorrow morning, each with its start time. */
 export function glanceEntries(tasks: Task[], completions: Completions, now = new Date()): GlanceEntry[] {
   const current = periodAt(now);
-  const entries: GlanceEntry[] = [{ startsAt: now.getTime(), ...propsFor(tasks, completions, now, current) }];
+  const style = GLANCE_STYLE;
+  const entries: GlanceEntry[] = [{ startsAt: now.getTime(), ...propsFor(tasks, completions, now, current), style }];
   for (const period of ORDER.slice(ORDER.indexOf(current) + 1)) {
-    entries.push({ startsAt: periodStart(now, period).getTime(), ...propsFor(tasks, completions, now, period) });
+    entries.push({ startsAt: periodStart(now, period).getTime(), ...propsFor(tasks, completions, now, period), style });
   }
   const tomorrow = addDays(new Date(now.getFullYear(), now.getMonth(), now.getDate()), 1);
-  entries.push({ startsAt: tomorrow.getTime(), ...propsFor(tasks, completions, tomorrow, 'morning') });
+  entries.push({ startsAt: tomorrow.getTime(), ...propsFor(tasks, completions, tomorrow, 'morning'), style });
   return entries;
 }
 
@@ -56,7 +64,8 @@ export function activityGlance(tasks: Task[], completions: Completions, now = ne
     .map((period) => propsFor(tasks, completions, now, period))
     .filter((props) => props.tasks.some((t) => !t.done));
   if (open.length === 0) return null;
-  return { ...open[0], later: open.slice(1) };
+  // `style` only once, at the top: ActivityKit caps a Live Activity's data at 4 KB.
+  return { ...open[0], style: GLANCE_STYLE, later: open.slice(1) };
 }
 
 // What we last sent to the widget and the activity, as `${day}|${taskId}` -> done.
