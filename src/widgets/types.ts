@@ -31,5 +31,12 @@ export type GlanceProps = {
 /** Button target for checking off a task: `toggle:<taskId>`. */
 export const TOGGLE_PREFIX = 'toggle:';
 
+/**
+ * Android pinned notification only: a hidden button the app presses natively when a part
+ * of the day starts, so the notification moves on to the next one. Must match the
+ * target in AndroidTasksNotification.tsx.
+ */
+export const TICK_TARGET = 'tick';
+
 /** GlanceProps for one period, plus when that period starts (Unix ms). */
 export type GlanceEntry = GlanceProps & { startsAt: number };

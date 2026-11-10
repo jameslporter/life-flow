@@ -1,7 +1,7 @@
 {
   "name": "life-flow",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "index.ts",
   "dependencies": {
     "@expo/ui": "~58.0.27",
     "@react-native-async-storage/async-storage": "2.2.0",
