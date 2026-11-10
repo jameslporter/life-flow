@@ -24,6 +24,8 @@ type Store = {
   addTask: (input: Omit<Task, 'id' | 'createdAt'>) => void;
   updateTask: (id: string, input: Partial<Omit<Task, 'id' | 'createdAt'>>) => void;
   deleteTask: (id: string) => void;
+  /** Move a task to another spot within its group (indexes count only that group's tasks). */
+  moveTask: (group: Group, from: number, to: number) => void;
   toggleDone: (taskId: string, day: string) => void;
   /** Set several completions at once, e.g. check-offs made from the widget. */
   setDone: (changes: DoneChange[]) => void;
@@ -54,6 +56,22 @@ function seed(): Task[] {
     make('Plan tomorrow', 'evening', WEEKDAYS, 4),
     make('Read for 20 minutes', 'evening', ALL_WEEK, 5),
   ];
+}
+
+/**
+ * Reorders one group's tasks while every other task keeps its place in the list.
+ * The list order is what the Today screen, widgets and Live Activity show.
+ */
+export function moveWithinGroup(tasks: Task[], group: Group, from: number, to: number): Task[] {
+  const slots: number[] = [];
+  tasks.forEach((t, i) => t.group === group && slots.push(i));
+  if (from < 0 || from >= slots.length || to < 0 || to >= slots.length || from === to) return tasks;
+  const items = slots.map((i) => tasks[i]);
+  const [moved] = items.splice(from, 1);
+  items.splice(to, 0, moved);
+  const next = [...tasks];
+  slots.forEach((slot, k) => (next[slot] = items[k]));
+  return next;
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -97,6 +115,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const moveTask = useCallback<Store['moveTask']>((group, from, to) => {
+    if (from === to) return;
+    setData((d) => ({ ...d, tasks: moveWithinGroup(d.tasks, group, from, to) }));
+  }, []);
+
   const toggleDone = useCallback<Store['toggleDone']>((taskId, day) => {
     setData((d) => {
       const current = d.completions[day] ?? [];
@@ -136,12 +159,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addTask,
       updateTask,
       deleteTask,
+      moveTask,
       toggleDone,
       setDone,
       reload,
       isDone,
     }),
-    [ready, data, settings, updateSettings, addTask, updateTask, deleteTask, toggleDone, setDone, reload, isDone]
+    [ready, data, settings, updateSettings, addTask, updateTask, deleteTask, moveTask, toggleDone, setDone, reload, isDone]
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
