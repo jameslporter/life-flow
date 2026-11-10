@@ -63,7 +63,7 @@ Three workflows in `.github/workflows/` run by hand from the repo's Actions tab 
 Secrets and credentials:
 
 - **`EXPO_TOKEN`** (GitHub repo secret, the only one needed). Create an access token at expo.dev → Account settings → Access tokens, then add it in GitHub under Settings → Secrets and variables → Actions → New repository secret.
-- **Apple and Google credentials stay on EAS, not in GitHub.** The workflows run non-interactively, so set them up once from your machine first (steps 3 and 4 above): iOS signing and an App Store Connect API key (`npx eas-cli@latest credentials -p ios`), and the Google Play service account key (`npx eas-cli@latest credentials -p android`).
+- **Apple and Google credentials stay on EAS, not in GitHub.** The workflows run non-interactively, so set them up once from your machine first (steps 3 and 4 above): iOS signing and an App Store Connect API key (`bunx eas-cli credentials -p ios`), and the Google Play service account key (`bunx eas-cli credentials -p android`).
 - **`ascAppId`** for iOS submits: non-interactive submits need the App Store Connect app id. Find it in App Store Connect → the app → App Information → Apple ID, and add it to `eas.json` under `submit.production.ios.ascAppId`.
 
 Manual commands:
