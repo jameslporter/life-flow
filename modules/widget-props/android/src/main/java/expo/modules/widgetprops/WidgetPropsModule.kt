@@ -19,5 +19,17 @@ class WidgetPropsModule : Module() {
         .getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
         .getString("__expo_widgets_${name}_props", null)
     }
+
+    Function("scheduleRefreshes") { times: List<Double>, widgets: List<String>, notificationName: String?, notificationId: String?, notificationTarget: String? ->
+      val context = appContext.reactContext?.applicationContext ?: return@Function
+      GlanceRefreshReceiver.schedule(
+        context,
+        times.map { it.toLong() },
+        widgets,
+        notificationName,
+        notificationId,
+        notificationTarget
+      )
+    }
   }
 }

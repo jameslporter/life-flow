@@ -21,8 +21,12 @@ function AndroidTasksNotification(props: GlanceProps, environment: CustomNotific
   const tasks = props.tasks ?? [];
   const done = tasks.filter((t) => t.done).length;
   const left = tasks.filter((t) => !t.done);
-  const summary =
-    tasks.length === 0 ? 'Nothing planned' : left.length === 0 ? 'All done 🎉' : `${done} of ${tasks.length} done`;
+  // This period is over and nothing later today is left. The app takes the notification
+  // down next time it runs; until then, don't show stale tasks.
+  const over = props.endsAt <= Date.now() && (props.later ?? []).length === 0;
+  const summary = over
+    ? 'Nothing left for today'
+    : tasks.length === 0 ? 'Nothing planned' : left.length === 0 ? 'All done 🎉' : `${done} of ${tasks.length} done`;
 
   const header = (
     <Text color={accent} style={{ fontSize: 15, fontWeight: 'bold' }}>
@@ -31,18 +35,36 @@ function AndroidTasksNotification(props: GlanceProps, environment: CustomNotific
   );
 
   return {
+    // Not drawn: only `collapsed` and `expanded` are. The app presses this button natively
+    // when a part of the day starts (see GlanceRefreshReceiver.kt), and its handler moves
+    // on to the next period with tasks left, which redraws the notification.
+    tick: (
+      <TextButton
+        {...({ target: 'tick' } as object)}
+        onClick={() => {
+          const now = Date.now();
+          let next = { ...props, later: props.later ?? [] };
+          while (next.endsAt <= now && next.later.length > 0) {
+            const [upcoming, ...rest] = next.later;
+            next = { ...next, ...upcoming, later: rest };
+          }
+          return next as unknown as void;
+        }}>
+        <Text>{''}</Text>
+      </TextButton>
+    ),
     collapsed: (
       <Column modifiers={[fillMaxWidth()]}>
         {header}
         <Text color={muted} maxLines={1} style={{ fontSize: 13 }}>
-          {left.length > 0 ? `Next: ${left[0].title}` : 'Nice work.'}
+          {over ? 'See you tomorrow.' : left.length > 0 ? `Next: ${left[0].title}` : 'Nice work.'}
         </Text>
       </Column>
     ),
     expanded: (
       <Column modifiers={[fillMaxWidth(), paddingAll(4)]}>
         {header}
-        {left.slice(0, 4).map((task) => (
+        {(over ? [] : left).slice(0, 4).map((task) => (
           <TextButton
             key={task.id}
             // `target` names the press; the TS types for Compose buttons don't list it yet.
@@ -66,7 +88,7 @@ function AndroidTasksNotification(props: GlanceProps, environment: CustomNotific
             </Row>
           </TextButton>
         ))}
-        {left.length > 4 ? (
+        {!over && left.length > 4 ? (
           <Text color={muted} style={{ fontSize: 12 }}>{`+${left.length - 4} more`}</Text>
         ) : null}
       </Column>
