@@ -28,9 +28,9 @@ function TasksActivity(props: GlanceProps, environment: LiveActivityEnvironment)
   const rows = (limit: number) =>
     left.slice(0, limit).map((task) => (
       <Button key={task.id} target={`toggle:${task.id}`} modifiers={[buttonStyle('plain'), foregroundStyle(primary)]}>
-        <HStack spacing={8}>
-          <Image systemName="circle" size={18} color={accent} />
-          <Text modifiers={[font({ size: 15 }), foregroundStyle(primary)]}>{task.title}</Text>
+        <HStack spacing={10} modifiers={[padding({ vertical: 3 })]}>
+          <Image systemName="circle" size={22} color={accent} />
+          <Text modifiers={[font({ size: 18 }), foregroundStyle(primary)]}>{task.title}</Text>
           <Spacer />
         </HStack>
       </Button>
@@ -50,12 +50,13 @@ function TasksActivity(props: GlanceProps, environment: LiveActivityEnvironment)
     banner: (
       <VStack
         alignment="leading"
-        spacing={8}
-        modifiers={[padding({ all: 14 }), activityBackgroundTint(dark ? '#1F1D1A' : '#FFFFFF')]}>
+        spacing={6}
+        modifiers={[padding({ all: 16 }), activityBackgroundTint(dark ? '#1F1D1A' : '#FFFFFF')]}>
         {header}
-        {rows(environment.isActivityFullscreen ? 8 : 4)}
-        {left.length > 4 && !environment.isActivityFullscreen ? (
-          <Text modifiers={[font({ size: 12 }), foregroundStyle(secondary)]}>{`+${left.length - 4} more`}</Text>
+        {/* The Lock Screen caps banners at about 160pt, so only 3 of the larger rows fit. */}
+        {rows(environment.isActivityFullscreen ? 8 : 3)}
+        {left.length > 3 && !environment.isActivityFullscreen ? (
+          <Text modifiers={[font({ size: 12 }), foregroundStyle(secondary)]}>{`+${left.length - 3} more`}</Text>
         ) : null}
       </VStack>
     ),
@@ -76,7 +77,7 @@ function TasksActivity(props: GlanceProps, environment: LiveActivityEnvironment)
     expandedTrailing: (
       <Text modifiers={[font({ size: 13, weight: 'semibold' }), foregroundStyle(secondary)]}>{summary}</Text>
     ),
-    expandedBottom: <VStack alignment="leading" spacing={6}>{rows(3)}</VStack>,
+    expandedBottom: <VStack alignment="leading" spacing={2}>{rows(3)}</VStack>,
   };
 }
 

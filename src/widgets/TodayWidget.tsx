@@ -1,5 +1,5 @@
 import { Button, HStack, Image, Spacer, Text, VStack } from '@expo/ui/swift-ui';
-import { buttonStyle, containerBackground, font, foregroundStyle, strikethrough } from '@expo/ui/swift-ui/modifiers';
+import { buttonStyle, containerBackground, font, foregroundStyle, padding, strikethrough } from '@expo/ui/swift-ui/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
 import type { GlanceProps } from './types';
@@ -45,15 +45,15 @@ function TodayWidget(props: GlanceProps, environment: WidgetEnvironment) {
           onPress={() => ({
             tasks: tasks.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t)),
           })}>
-          <HStack spacing={6}>
+          <HStack spacing={8} modifiers={[padding({ vertical: small ? 1 : 3 })]}>
             <Image
               systemName={task.done ? 'checkmark.circle.fill' : 'circle'}
-              size={small ? 14 : 16}
+              size={small ? 17 : 20}
               color={accent}
             />
             <Text
               modifiers={[
-                font({ size: small ? 12 : 14 }),
+                font({ size: small ? 14 : 17 }),
                 foregroundStyle(task.done ? 'secondary' : 'primary'),
                 strikethrough({ isActive: task.done, pattern: 'solid' }),
               ]}>

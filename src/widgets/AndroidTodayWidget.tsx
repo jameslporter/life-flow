@@ -1,5 +1,5 @@
 import { Column, Row, Spacer, Text, TextButton } from '@expo/ui/jetpack-compose';
-import { background, cornerRadius, fillMaxSize, fillMaxWidth, height, paddingAll } from '@expo/ui/jetpack-compose/modifiers';
+import { background, cornerRadius, fillMaxSize, fillMaxWidth, height, padding, paddingAll } from '@expo/ui/jetpack-compose/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
 import type { GlanceEntry } from './types';
@@ -66,16 +66,16 @@ function AndroidTodayWidget(props: AndroidWidgetProps, environment: WidgetEnviro
               ),
             }) as unknown as void
           }>
-          <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
+          <Row verticalAlignment="center" modifiers={[fillMaxWidth(), padding(0, 5, 0, 5)]}>
             {/* Not a Checkbox: Android ticks a widget checkbox by itself when tapped and swallows
                 the tap, so the button's press never runs and the app never hears about it. */}
-            <Text color={accent} style={{ fontSize: 16, fontWeight: 'bold' }}>
+            <Text color={accent} style={{ fontSize: 20, fontWeight: 'bold' }}>
               {task.done ? '✓  ' : '○  '}
             </Text>
             <Text
               color={task.done ? muted : text}
               maxLines={1}
-              style={{ fontSize: 14, textDecoration: task.done ? 'lineThrough' : 'none' }}>
+              style={{ fontSize: 17, textDecoration: task.done ? 'lineThrough' : 'none' }}>
               {task.title}
             </Text>
           </Row>

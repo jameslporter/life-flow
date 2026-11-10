@@ -1,5 +1,5 @@
 import { Column, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth, paddingAll } from '@expo/ui/jetpack-compose/modifiers';
+import { fillMaxWidth, padding, paddingAll } from '@expo/ui/jetpack-compose/modifiers';
 import { createCustomNotification, type CustomNotificationEnvironment } from 'expo-widgets';
 
 import type { GlanceProps } from './types';
@@ -56,7 +56,7 @@ function AndroidTasksNotification(props: GlanceProps, environment: CustomNotific
     collapsed: (
       <Column modifiers={[fillMaxWidth()]}>
         {header}
-        <Text color={muted} maxLines={1} style={{ fontSize: 13 }}>
+        <Text color={muted} maxLines={1} style={{ fontSize: 15 }}>
           {over ? 'See you tomorrow.' : left.length > 0 ? `Next: ${left[0].title}` : 'Nice work.'}
         </Text>
       </Column>
@@ -80,12 +80,12 @@ function AndroidTasksNotification(props: GlanceProps, environment: CustomNotific
               }
               return next as unknown as void;
             }}>
-            <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
+            <Row verticalAlignment="center" modifiers={[fillMaxWidth(), padding(0, 5, 0, 5)]}>
               {/* Not a Checkbox, which takes the tap itself; see AndroidTodayWidget.tsx. */}
-              <Text color={accent} style={{ fontSize: 16, fontWeight: 'bold' }}>
+              <Text color={accent} style={{ fontSize: 20, fontWeight: 'bold' }}>
                 {'○  '}
               </Text>
-              <Text color={text} maxLines={1} style={{ fontSize: 14 }}>
+              <Text color={text} maxLines={1} style={{ fontSize: 17 }}>
                 {task.title}
               </Text>
             </Row>
