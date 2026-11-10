@@ -1,0 +1,58 @@
+# Builds the iOS app on EAS. Start it from the Actions tab ("Run workflow").
+# Tick "submit" to send a production build to App Store Connect (TestFlight) when it finishes.
+# Needs the EXPO_TOKEN repository secret (see README → "Native builds with EAS").
+name: EAS build iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Build profile from eas.json
+        type: choice
+        options: [production, preview, development]
+        default: production
+      submit:
+        description: Submit to App Store Connect (TestFlight) after the build (production only)
+        type: boolean
+        default: false
+
+concurrency:
+  group: eas-build-ios
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check inputs
+        if: ${{ inputs.submit && inputs.profile != 'production' }}
+        run: |
+          echo "::error::Only the production profile can be submitted to the store."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          packager: bun
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # eas-cli reads app.json and its config plugins, so the dependencies must be installed.
+      - run: bun install --frozen-lockfile
+
+      # --no-wait hands the build to EAS and ends this job, so it doesn't use Actions minutes
+      # while EAS builds. With --auto-submit, EAS submits the build itself once it's done.
+      # Follow progress on expo.dev (the build link is printed below).
+      - name: Start EAS build
+        run: >
+          eas build
+          --platform ios
+          --profile ${{ inputs.profile }}
+          --non-interactive
+          --no-wait
+          ${{ inputs.submit && '--auto-submit' || '' }}

@@ -14,41 +14,75 @@ Live web version: https://jameslporter.github.io/life-flow/
 ## Develop
 
 ```bash
-npm install
-npm start          # Expo dev server (press w for web, or scan with Expo Go)
-npm run typecheck
-npm run export:web # static web build in dist/
+bun install
+bun start          # Expo dev server (press w for web, a for Android, i for iOS)
+bun run typecheck
+bun run export:web # static web build in dist/
 ```
 
 Routes live in `src/app/`, shared code in `src/lib/` and `src/components/`.
+
+This app uses native modules (`expo-widgets`, `expo-background-task`, `modules/widget-props`) that aren't in Expo Go, so `bun start` needs a development build installed on the simulator/device/emulator — see below.
 
 ## Deploy
 
 Every push to `main` builds the web export and publishes it to GitHub Pages via `.github/workflows/deploy-pages.yml`. The site is served from `/life-flow`, set by `experiments.baseUrl` in `app.json`.
 
+## Development builds (CNG)
+
+There's no `ios/` or `android/` directory in this repo — Expo's Continuous Native Generation (CNG) creates native projects on demand from `app.json` and the config plugins, and they're gitignored. Never hand-edit generated `ios/`/`android/` folders; change native behavior through `app.json` or a config plugin instead.
+
+Because this app has native modules (`expo-widgets`, `expo-background-task`, `modules/widget-props`), it needs a development build rather than Expo Go:
+
+```bash
+bun run android   # bunx expo run:android — builds + installs on an emulator/device, needs Android Studio's SDK
+bun run ios       # bunx expo run:ios — builds + installs on a simulator/device, needs Xcode (macOS only)
+```
+
+Rebuild only when native deps change (new library with native code, config plugin change, or `app.json` edit); otherwise `bun start` reuses the installed dev client. To build in the cloud instead of locally, use the `development` EAS profile below.
+
 ## Native builds with EAS
+
+EAS is already set up for this project: `app.json` has `extra.eas.projectId`/`owner`, and this GitHub repo is connected on expo.dev so workflows can run.
 
 `eas.json` has three build profiles:
 
-- `development`: a dev-client build for testing on your own devices
+- `development`: a dev-client build for testing on your own devices (cloud equivalent of `expo run:android|ios` above)
 - `preview`: an internal build (APK on Android) to share with testers
 - `production`: store builds, with version numbers managed by EAS
 
-`.eas/workflows/release.yml` builds both platforms on EAS and submits iOS to TestFlight and Android to the Google Play internal track. Start it from the Workflows tab on expo.dev or with `npx eas-cli workflow:run release.yml`.
+`.eas/workflows/release.yml` builds both platforms on EAS and submits iOS to TestFlight and Android to the Google Play internal track. Start it from the Workflows tab on expo.dev or with `bunx eas-cli workflow:run release.yml`.
 
-One-time setup:
+### GitHub Actions
 
-1. `npx eas-cli@latest login`, then `npx eas-cli@latest init` to link the project (adds `extra.eas.projectId` and `owner` to `app.json`; commit that).
-2. On expo.dev, connect this GitHub repo to the project (Project settings → GitHub) so workflows can run.
-3. iOS: an Apple Developer account. Run `npx eas-cli@latest build -p ios --profile production` once to set up signing, then `npx eas-cli@latest submit -p ios` to create the App Store Connect app and API key.
-4. Android: create the app in Google Play Console, upload the first build by hand (Google requires that), and add a Google service account key to EAS (`npx eas-cli@latest credentials -p android`).
+These workflows in `.github/workflows/` run by hand from the repo's Actions tab ("Run workflow"):
+
+- **EAS build iOS** (`eas-build-ios.yml`) and **EAS build Android** (`eas-build-android.yml`): pick a profile (`production`, `preview` or `development`). Tick **submit** on a production build to send it to TestFlight or the Play internal track as soon as EAS finishes it. The job hands the build to EAS and ends right away; follow it on expo.dev.
+- **EAS submit to stores** (`eas-submit.yml`): sends the latest finished build for iOS, Android or both.
+
+Secrets and credentials:
+
+- **`EXPO_TOKEN`** (GitHub repo secret, the only one needed). Create an access token at expo.dev → Account settings → Access tokens, then add it in GitHub under Settings → Secrets and variables → Actions → New repository secret.
+- **Apple and Google credentials stay on EAS, not in GitHub.** The workflows run non-interactively, so set them up once from your machine first (steps 3 and 4 above): iOS signing and an App Store Connect API key (`bunx eas-cli credentials -p ios`), and the Google Play service account key (`bunx eas-cli credentials -p android`).
+- **`ascAppId`** for iOS submits: non-interactive submits need the App Store Connect app id. Find it in App Store Connect → the app → App Information → Apple ID, and add it to `eas.json` under `submit.production.ios.ascAppId`.
 
 Manual commands:
 
 ```bash
-npx eas-cli@latest build --profile production --platform all
-npx eas-cli@latest submit --profile production --platform all
+bunx eas-cli@latest build --profile development --platform android   # cloud dev-client build
+bunx eas-cli@latest build --profile production --platform all
+bunx eas-cli@latest submit --profile production --platform all
 ```
+
+### Over-the-air updates (EAS Update)
+
+`expo-updates` lets a store build download new JavaScript and assets without going through app review. Each build profile has a matching channel in `eas.json` (`development`, `preview`, `production`).
+
+- **EAS update** (`eas-update.yml`) runs on every push to `main` (skipping Markdown and store-asset-only changes) and publishes to the `production` channel. You can also start it by hand from the Actions tab. It uses the same `EXPO_TOKEN` secret.
+- Updates only reach builds with a matching runtime version. `app.json` uses the `fingerprint` policy, so adding a native package, changing a config plugin or touching `modules/` changes the runtime: ship that as a new store build. JS-only changes go out as updates.
+- Builds made before `expo-updates` was added can't receive updates. Make one new production build to start.
+
+Publish by hand: `bunx eas-cli update --channel preview --message "Try this"` (use any channel).
 
 ## Claude Code
 

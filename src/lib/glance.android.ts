@@ -1,9 +1,9 @@
 import { addUserInteractionListener } from 'expo-widgets';
 
-import { getWidgetProps } from '../../modules/widget-props';
+import { getWidgetProps, scheduleRefreshes } from '../../modules/widget-props';
 import AndroidTasksNotification from '@/widgets/AndroidTasksNotification';
 import AndroidTodayWidget, { type AndroidWidgetProps } from '@/widgets/AndroidTodayWidget';
-import type { GlanceProps } from '@/widgets/types';
+import { TICK_TARGET, type GlanceProps } from '@/widgets/types';
 
 import { activityGlance, changesSincePush, glanceEntries, recordPushed } from './glance-common';
 import type { Completions, DoneChange } from './persist';
@@ -19,6 +19,13 @@ export const activityName = 'Pinned notification';
 export async function pushWidget(tasks: Task[], completions: Completions, now = new Date()) {
   const entries = glanceEntries(tasks, completions, now);
   AndroidTodayWidget.updateSnapshot({ entries });
+  // Move the widget and the pinned notification on when each later part of the day starts,
+  // even if the app doesn't get to run then.
+  scheduleRefreshes(
+    entries.slice(1).map((e) => e.startsAt),
+    ['TodayWidget'],
+    { name: 'TasksNotification', id: NOTIFICATION_ID, target: TICK_TARGET }
+  );
   await recordPushed(tasks, completions, now);
 }
 

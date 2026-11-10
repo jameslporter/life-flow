@@ -4,17 +4,26 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "bun": "1.4.4"
+    },
     "development": {
+      "extends": "base",
+      "channel": "development",
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
+      "extends": "base",
+      "channel": "preview",
       "distribution": "internal",
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
+      "extends": "base",
+      "channel": "production",
       "autoIncrement": true
     }
   },

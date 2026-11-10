@@ -1,0 +1,49 @@
+# Publishes an over-the-air update (the JS bundle and assets) to the "production" channel on
+# every push to main. Store builds made with the production profile download it on their next
+# launch. Updates only reach builds with the same runtime version: app.json uses the
+# "fingerprint" policy, so a change to native code (new native package, config plugin, local
+# module) gets a new runtime and needs a new store build instead.
+# Needs the EXPO_TOKEN repository secret.
+name: EAS update
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'store-assets/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: eas-update
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          packager: bun
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: bun install --frozen-lockfile
+
+      - name: Publish update
+        env:
+          # Passed through env so the commit message can't inject shell code.
+          MESSAGE: ${{ github.event.head_commit.message || 'Manual update' }}
+        run: >
+          eas update
+          --channel production
+          --platform all
+          --message "$(echo "$MESSAGE" | head -n 1)"
+          --non-interactive
