@@ -1,4 +1,4 @@
-import { Checkbox, Column, Row, Spacer, Text, TextButton } from '@expo/ui/jetpack-compose';
+import { Column, Row, Spacer, Text, TextButton } from '@expo/ui/jetpack-compose';
 import { background, cornerRadius, fillMaxSize, fillMaxWidth, height, paddingAll } from '@expo/ui/jetpack-compose/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
@@ -67,7 +67,11 @@ function AndroidTodayWidget(props: AndroidWidgetProps, environment: WidgetEnviro
             }) as unknown as void
           }>
           <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
-            <Checkbox value={task.done} colors={{ checkedColor: accent, uncheckedColor: accent }} />
+            {/* Not a Checkbox: Android ticks a widget checkbox by itself when tapped and swallows
+                the tap, so the button's press never runs and the app never hears about it. */}
+            <Text color={accent} style={{ fontSize: 16, fontWeight: 'bold' }}>
+              {task.done ? '✓  ' : '○  '}
+            </Text>
             <Text
               color={task.done ? muted : text}
               maxLines={1}

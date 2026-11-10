@@ -1,4 +1,4 @@
-import { Checkbox, Column, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
+import { Column, Row, Text, TextButton } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, paddingAll } from '@expo/ui/jetpack-compose/modifiers';
 import { createCustomNotification, type CustomNotificationEnvironment } from 'expo-widgets';
 
@@ -81,7 +81,10 @@ function AndroidTasksNotification(props: GlanceProps, environment: CustomNotific
               return next as unknown as void;
             }}>
             <Row verticalAlignment="center" modifiers={[fillMaxWidth()]}>
-              <Checkbox value={false} colors={{ uncheckedColor: accent }} />
+              {/* Not a Checkbox, which takes the tap itself; see AndroidTodayWidget.tsx. */}
+              <Text color={accent} style={{ fontSize: 16, fontWeight: 'bold' }}>
+                {'○  '}
+              </Text>
               <Text color={text} maxLines={1} style={{ fontSize: 14 }}>
                 {task.title}
               </Text>
