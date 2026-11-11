@@ -21,12 +21,16 @@ function TodayWidget(props: GlanceProps, environment: WidgetEnvironment) {
   const small = environment.widgetFamily === 'systemSmall';
   const dark = environment.colorScheme === 'dark';
   const accent = (dark ? props.colorDark : props.color) ?? 'primary';
-  // Only data pushed before `style` existed lacks it; these match GLANCE_STYLE.
-  const style = props.style ?? {
-    light: { surface: '#FFFFFF', text: '#1D1B18', muted: '#6F6A62' },
-    dark: { surface: '#1F1D1A', text: '#F1EEE8', muted: '#A39D93' },
-    size: { header: 15, row: 17, mark: 20, rowPad: 3, note: 13, small: 12 },
-  };
+  const style = props.style;
+  // Data pushed by app versions before `style` existed has none. Show a plain note in
+  // system styles instead of keeping a second copy of the theme here.
+  if (!style) {
+    return (
+      <VStack modifiers={[containerBackground({ type: 'material', material: 'regular' }, 'widget')]}>
+        <Text modifiers={[foregroundStyle('secondary')]}>Open Life flow to refresh.</Text>
+      </VStack>
+    );
+  }
   const colors = dark ? style.dark : style.light;
   // Small widgets are tight, so everything is a few points smaller there.
   const shrink = small ? 3 : 0;

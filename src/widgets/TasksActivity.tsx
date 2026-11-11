@@ -25,12 +25,19 @@ function TasksActivity(props: GlanceProps, environment: LiveActivityEnvironment)
   const primary = { type: 'hierarchical', style: 'primary' } as const;
   const secondary = { type: 'hierarchical', style: 'secondary' } as const;
   const summary = tasks.length === 0 ? 'Nothing planned' : left.length === 0 ? 'All done 🎉' : `${done}/${tasks.length}`;
-  // Only data pushed before `style` existed lacks it; these match GLANCE_STYLE.
-  const style = props.style ?? {
-    light: { surface: '#FFFFFF', text: '#1D1B18', muted: '#6F6A62' },
-    dark: { surface: '#1F1D1A', text: '#F1EEE8', muted: '#A39D93' },
-    size: { header: 15, row: 17, mark: 20, rowPad: 3, note: 13, small: 12 },
-  };
+  const style = props.style;
+  // Data pushed by app versions before `style` existed has none. Show a plain note in
+  // system styles instead of keeping a second copy of the theme here.
+  if (!style) {
+    const note = <Text modifiers={[foregroundStyle(secondary)]}>Open Life flow to refresh.</Text>;
+    return {
+      banner: <VStack modifiers={[padding({ all: 16 }), activityBackgroundTint(null)]}>{note}</VStack>,
+      compactLeading: <Text>{props.emoji ?? '✓'}</Text>,
+      compactTrailing: <Text>{''}</Text>,
+      minimal: <Text>{props.emoji ?? '✓'}</Text>,
+      expandedBottom: note,
+    };
+  }
   const colors = dark ? style.dark : style.light;
   // The Lock Screen is read at a glance, often from arm's length, so rows are a bit larger.
   const size = { ...style.size, row: style.size.row + 1, mark: style.size.mark + 2 };

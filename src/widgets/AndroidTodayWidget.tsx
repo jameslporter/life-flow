@@ -1,4 +1,4 @@
-import { Column, Row, Spacer, Text, TextButton } from '@expo/ui/jetpack-compose';
+import { Column, Row, Spacer, Text, TextButton, getMaterialColors } from '@expo/ui/jetpack-compose';
 import { background, cornerRadius, fillMaxSize, fillMaxWidth, height, padding, paddingAll } from '@expo/ui/jetpack-compose/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
@@ -26,12 +26,17 @@ function AndroidTodayWidget(props: AndroidWidgetProps, environment: WidgetEnviro
   const entry = entries[index];
 
   const dark = environment.colorScheme === 'dark';
-  // Only data pushed before `style` existed lacks it; these match GLANCE_STYLE.
-  const style = entry?.style ?? {
-    light: { surface: '#FFFFFF', text: '#1D1B18', muted: '#6F6A62' },
-    dark: { surface: '#1F1D1A', text: '#F1EEE8', muted: '#A39D93' },
-    size: { header: 15, row: 17, mark: 20, rowPad: 3, note: 13, small: 12 },
-  };
+  const style = entry?.style;
+  // No data yet, or data pushed by app versions before `style` existed. Show a plain note
+  // in the device's Material colors instead of keeping a second copy of the theme here.
+  if (!entry || !style) {
+    const system = getMaterialColors();
+    return (
+      <Column modifiers={[fillMaxSize(), background(system.surface), cornerRadius(20), paddingAll(14)]}>
+        <Text color={system.onSurfaceVariant}>Open Life flow to load your tasks.</Text>
+      </Column>
+    );
+  }
   const colors = dark ? style.dark : style.light;
   const size = style.size;
 
@@ -40,14 +45,6 @@ function AndroidTodayWidget(props: AndroidWidgetProps, environment: WidgetEnviro
       {children}
     </Text>
   );
-
-  if (!entry) {
-    return (
-      <Column modifiers={[fillMaxSize(), background(colors.surface), cornerRadius(20), paddingAll(14)]}>
-        <Note>Open Life flow to load your tasks.</Note>
-      </Column>
-    );
-  }
 
   const accent = dark ? entry.colorDark : entry.color;
   const tasks = entry.tasks ?? [];

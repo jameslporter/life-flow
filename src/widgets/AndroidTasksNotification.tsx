@@ -17,12 +17,13 @@ function AndroidTasksNotification(props: GlanceProps, environment: CustomNotific
   'widget';
   const dark = environment.colorScheme === 'dark';
   const accent = dark ? props.colorDark : props.color;
-  // Only data pushed before `style` existed lacks it; these match GLANCE_STYLE.
-  const style = props.style ?? {
-    light: { surface: '#FFFFFF', text: '#1D1B18', muted: '#6F6A62' },
-    dark: { surface: '#1F1D1A', text: '#F1EEE8', muted: '#A39D93' },
-    size: { header: 15, row: 17, mark: 20, rowPad: 3, note: 13, small: 12 },
-  };
+  const style = props.style;
+  // Data pushed by app versions before `style` existed has none. Show a plain note in
+  // system colors instead of keeping a second copy of the theme here.
+  if (!style) {
+    const note = <Text>Open Life flow to refresh.</Text>;
+    return { collapsed: note, expanded: note };
+  }
   const colors = dark ? style.dark : style.light;
   const size = style.size;
   const tasks = props.tasks ?? [];
