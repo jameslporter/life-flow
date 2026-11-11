@@ -7,13 +7,21 @@ import { Screen } from '@/components/Screen';
 import { addDays, dateKey, describeDays, formatLongDate, sameDay, startOfWeek } from '@/lib/dates';
 import { useStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme';
+import { useToday } from '@/lib/useToday';
 import { DAY_SHORT, GROUPS } from '@/lib/types';
 
 export default function Today() {
   const theme = useTheme();
   const { ready, tasks, isDone, toggleDone } = useStore();
-  const today = new Date();
+  const today = useToday();
   const [selected, setSelected] = useState(today);
+  // When the day rolls over, jump back to today so the screen matches the
+  // widget and Live Activity / pinned notification.
+  const [shownFor, setShownFor] = useState(today);
+  if (shownFor !== today) {
+    setShownFor(today);
+    setSelected(today);
+  }
   const key = dateKey(selected);
   const weekStart = startOfWeek(today);
   const week = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
