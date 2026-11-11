@@ -46,8 +46,9 @@ export type GlanceProps = {
   /** Theme colors and sizes. Missing on data pushed by app versions before it was added. */
   style?: GlanceStyle;
   /**
-   * Live Activity / pinned notification only: the rest of today's periods that still
-   * have tasks, in order. Shown next once every task in this period is checked off.
+   * The rest of today's periods, in order. Shown next once every task in this period is
+   * checked off. The Live Activity / pinned notification get only those with tasks left;
+   * the iOS widget gets them all (Android's widget uses its `entries` instead).
    */
   later?: Omit<GlanceProps, 'later' | 'checked' | 'style'>[];
   /**
