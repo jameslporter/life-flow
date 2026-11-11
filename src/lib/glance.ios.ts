@@ -18,14 +18,21 @@ export const activityName = 'Live Activity';
 /** Sends the rest of today, period by period, plus tomorrow morning to the widget. */
 export async function pushWidget(tasks: Task[], completions: Completions, now = new Date()) {
   const entries = glanceEntries(tasks, completions, now);
-  TodayWidget.updateTimeline(entries.map((props) => ({ date: new Date(props.startsAt), props })));
+  TodayWidget.updateTimeline(
+    entries.map(({ startsAt, ...props }, i) => ({
+      date: new Date(startsAt),
+      // The rest of that day, so the widget can move on by itself once this period is done.
+      props: { ...props, later: entries.slice(i + 1).filter((e) => e.day === props.day).map(({ startsAt: _, style: __, ...p }) => p) },
+    }))
+  );
   await recordPushed(tasks, completions, now);
 }
 
 /** Check-offs made on the widget or the Live Activity since the last push. */
 export async function glanceChanges(): Promise<DoneChange[]> {
   const timeline = await TodayWidget.getTimeline();
-  const fromWidget = await changesSincePush(timeline.map((e) => e.props));
+  // Tasks from later periods can be checked off on the widget too once it has moved on.
+  const fromWidget = await changesSincePush(timeline.flatMap((e) => [e.props, ...(e.props.later ?? [])]));
   // Recorded natively, so presses made while the app wasn't running aren't lost.
   const fromActivity = takePendingActivityChecks().map((c) => ({ ...c, done: true }));
   return [...fromWidget, ...fromActivity];

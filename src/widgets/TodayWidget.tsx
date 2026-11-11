@@ -5,15 +5,20 @@ import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 import type { GlanceProps, GlanceTask } from './types';
 
 /**
- * Home screen widget with the tasks for the current period. Tapping a task
+ * Home screen widget with the tasks for the current period, or the next one today with
+ * tasks left once that's all done. Tapping a task
  * checks it off right on the widget; the app picks the change up next time it runs.
  *
  * This function runs in the widget's own JS runtime: it can only use Expo UI
  * components and modifiers, and nothing from module scope. Shared pieces are
- * small components defined inside it, and colors and sizes come from `props.style`.
+ * small components defined inside it, and colors and sizes come from `entry.style`.
  */
-function TodayWidget(props: GlanceProps, environment: WidgetEnvironment) {
+function TodayWidget(entry: GlanceProps, environment: WidgetEnvironment) {
   'widget';
+  // Like the Live Activity: once this period's tasks are all done, show the next period
+  // today that still has some. Stays put when nothing is left today.
+  const later = entry.later ?? [];
+  const props = [entry, ...later].find((p) => (p.tasks ?? []).some((t) => !t.done)) ?? entry;
   const max = environment.widgetFamily === 'systemLarge' ? 8 : 3;
   const tasks = props.tasks ?? [];
   const shown = tasks.filter((t) => !t.done).concat(tasks.filter((t) => t.done)).slice(0, max);
@@ -21,7 +26,7 @@ function TodayWidget(props: GlanceProps, environment: WidgetEnvironment) {
   const small = environment.widgetFamily === 'systemSmall';
   const dark = environment.colorScheme === 'dark';
   const accent = (dark ? props.colorDark : props.color) ?? 'primary';
-  const style = props.style;
+  const style = entry.style;
   // Data pushed by app versions before `style` existed has none. Show a plain note in
   // system styles instead of keeping a second copy of the theme here.
   if (!style) {
@@ -53,9 +58,11 @@ function TodayWidget(props: GlanceProps, environment: WidgetEnvironment) {
     <Button
       target={`toggle:${task.id}`}
       modifiers={[buttonStyle('plain')]}
-      onPress={() => ({
-        tasks: tasks.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t)),
-      })}>
+      onPress={() => {
+        // The task may be in a later period the widget has moved on to.
+        const toggle = (list: GlanceTask[]) => list.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t));
+        return { tasks: toggle(entry.tasks ?? []), later: later.map((p) => ({ ...p, tasks: toggle(p.tasks ?? []) })) };
+      }}>
       <HStack spacing={8} modifiers={[padding({ vertical: size.rowPad })]}>
         <Image systemName={task.done ? 'checkmark.circle.fill' : 'circle'} size={size.mark} color={accent} />
         <Text

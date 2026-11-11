@@ -11,7 +11,8 @@ export type AndroidWidgetProps = { entries: GlanceEntry[] };
  * task checks it off right on the widget; the app picks the change up next time it runs.
  *
  * Android widgets have no timeline, so the app sends every period left today and
- * the widget picks the current one each time it draws.
+ * the widget picks the current one each time it draws, moving on to the next one
+ * with tasks left once the current one is all done.
  *
  * This function runs in the widget's own JS runtime: it can only use Expo UI
  * components and modifiers, and nothing from module scope. Shared pieces are
@@ -21,8 +22,17 @@ function AndroidTodayWidget(props: AndroidWidgetProps, environment: WidgetEnviro
   'widget';
   const entries = props.entries ?? [];
   const now = Date.now();
-  let index = 0;
-  for (let i = 0; i < entries.length; i++) if (entries[i].startsAt <= now) index = i;
+  let current = 0;
+  for (let i = 0; i < entries.length; i++) if (entries[i].startsAt <= now) current = i;
+  // Like the pinned notification: once this period's tasks are all done, show the next
+  // period today that still has some. Stays put when nothing is left today.
+  let index = current;
+  for (let i = current; i < entries.length && entries[i].day === entries[current].day; i++) {
+    if (entries[i].tasks.some((t) => !t.done)) {
+      index = i;
+      break;
+    }
+  }
   const entry = entries[index];
 
   const dark = environment.colorScheme === 'dark';
