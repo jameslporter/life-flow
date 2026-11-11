@@ -1,0 +1,21 @@
+diff --git a/ios/Widgets/AppIntent.swift b/ios/Widgets/AppIntent.swift
+index 1730fffee8dd7992c09457e88542cd743be741e1..2cf6b928e0d05b04ffa6f1f0ad2bed1543290c27 100644
+--- a/ios/Widgets/AppIntent.swift
++++ b/ios/Widgets/AppIntent.swift
+@@ -86,6 +86,16 @@ struct WidgetUserInteraction: AppIntent {
+         return .result()
+       }
+       newTimeline[entryIndex] = newEntry
++      // Life flow patch: a `shared` prop returned by a press is written to every
++      // timeline entry, so state changed now is still there when a later entry shows.
++      if let shared = newProps["shared"] {
++        for index in newTimeline.indices where index != entryIndex {
++          if var props = newTimeline[index]["props"] as? [String: Any] {
++            props["shared"] = shared
++            newTimeline[index]["props"] = props
++          }
++        }
++      }
+       WidgetsStorage.set(newTimeline, forKey: "__expo_widgets_\(source)_timeline")
+     }
+ 

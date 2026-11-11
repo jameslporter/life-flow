@@ -50,7 +50,12 @@ export type GlanceProps = {
    * checked off. The Live Activity / pinned notification get only those with tasks left;
    * the iOS widget gets them all (Android's widget uses its `entries` instead).
    */
-  later?: Omit<GlanceProps, 'later' | 'checked' | 'style'>[];
+  later?: Omit<GlanceProps, 'later' | 'checked' | 'shared' | 'style'>[];
+  /**
+   * iOS widget only: state a press saves to every timeline entry, not just the one
+   * showing. `checks` maps `${day}|${taskId}` to done for tasks tapped on the widget.
+   */
+  shared?: { checks?: Record<string, boolean> };
   /**
    * Android pinned notification only: ids of tasks checked off on it, kept even after
    * it moves on to the next period, so the app can pick them all up.
