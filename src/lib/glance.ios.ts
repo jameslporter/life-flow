@@ -31,8 +31,16 @@ export async function pushWidget(tasks: Task[], completions: Completions, now = 
 /** Check-offs made on the widget or the Live Activity since the last push. */
 export async function glanceChanges(): Promise<DoneChange[]> {
   const timeline = await TodayWidget.getTimeline();
-  // Tasks from later periods can be checked off on the widget too once it has moved on.
-  const fromWidget = await changesSincePush(timeline.flatMap((e) => [e.props, ...(e.props.later ?? [])]));
+  // Widget check-offs are kept in `shared.checks` (see TodayWidget.tsx), and can be for
+  // tasks in later periods once the widget has moved on.
+  const fromWidget = await changesSincePush(
+    timeline.flatMap(({ props }) =>
+      [props, ...(props.later ?? [])].map((p) => ({
+        day: p.day,
+        tasks: p.tasks.map((t) => ({ ...t, done: props.shared?.checks?.[`${p.day}|${t.id}`] ?? t.done })),
+      }))
+    )
+  );
   // Recorded natively, so presses made while the app wasn't running aren't lost.
   const fromActivity = takePendingActivityChecks().map((c) => ({ ...c, done: true }));
   return [...fromWidget, ...fromActivity];
