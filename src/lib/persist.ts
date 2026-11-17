@@ -16,6 +16,8 @@ export type Settings = {
   reminderMinute: number;
   /** Start the Live Activity (iOS) or pinned notification (Android) whenever the app opens. */
   liveActivityOnOpen: boolean;
+  /** The user closed the Today screen's prompt to add the home screen widget (Android). */
+  widgetPromptDismissed: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -23,6 +25,7 @@ export const DEFAULT_SETTINGS: Settings = {
   reminderHour: 7,
   reminderMinute: 0,
   liveActivityOnOpen: false,
+  widgetPromptDismissed: false,
 };
 
 /** A new install starts with the morning reminder and the Live Activity / pinned notification on. */

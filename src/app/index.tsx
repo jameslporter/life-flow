@@ -2,6 +2,7 @@ import { Link, Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AddWidgetPrompt } from '@/components/AddWidgetPrompt';
 import { HeaderLink } from '@/components/HeaderButton';
 import { Screen } from '@/components/Screen';
 import { addDays, dateKey, describeDays, formatLongDate, sameDay, startOfWeek } from '@/lib/dates';
@@ -51,6 +52,8 @@ export default function Today() {
             </Text>
           )}
         </View>
+
+        <AddWidgetPrompt />
 
         <View style={styles.week}>
           {week.map((d) => {
