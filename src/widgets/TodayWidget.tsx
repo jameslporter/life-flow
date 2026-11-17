@@ -17,8 +17,18 @@ function TodayWidget(entry: GlanceProps, environment: WidgetEnvironment) {
   'widget';
   // Like the Live Activity: once this period's tasks are all done, show the next period
   // today that still has some. Stays put when nothing is left today.
-  const later = entry.later ?? [];
-  const props = [entry, ...later].find((p) => (p.tasks ?? []).some((t) => !t.done)) ?? entry;
+  // Check-offs made on the widget live in `shared`, which a press saves to every timeline
+  // entry (patches/expo-widgets*.patch), so they still show once a later entry takes over.
+  const checks = entry.shared?.checks ?? {};
+  const withChecks = (p: Omit<GlanceProps, 'later' | 'shared' | 'style'>) => ({
+    ...p,
+    tasks: (p.tasks ?? []).map((t) => {
+      const done = checks[`${p.day}|${t.id}`];
+      return done === undefined ? t : { ...t, done };
+    }),
+  });
+  const periods = [entry, ...(entry.later ?? [])].map(withChecks);
+  const props = periods.find((p) => p.tasks.some((t) => !t.done)) ?? periods[0];
   const max = environment.widgetFamily === 'systemLarge' ? 8 : 3;
   const tasks = props.tasks ?? [];
   const shown = tasks.filter((t) => !t.done).concat(tasks.filter((t) => t.done)).slice(0, max);
@@ -58,11 +68,7 @@ function TodayWidget(entry: GlanceProps, environment: WidgetEnvironment) {
     <Button
       target={`toggle:${task.id}`}
       modifiers={[buttonStyle('plain')]}
-      onPress={() => {
-        // The task may be in a later period the widget has moved on to.
-        const toggle = (list: GlanceTask[]) => list.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t));
-        return { tasks: toggle(entry.tasks ?? []), later: later.map((p) => ({ ...p, tasks: toggle(p.tasks ?? []) })) };
-      }}>
+      onPress={() => ({ shared: { checks: { ...checks, [`${props.day}|${task.id}`]: !task.done } } })}>
       <HStack spacing={8} modifiers={[padding({ vertical: size.rowPad })]}>
         <Image systemName={task.done ? 'checkmark.circle.fill' : 'circle'} size={size.mark} color={accent} />
         <Text
