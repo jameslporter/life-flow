@@ -1,5 +1,5 @@
 [tools]
 bun = "1.4.4"
-java = "openjdk-27"
+java = "openjdk-17"
 node = "26.13.0"
 ruby = "3.4.12"
