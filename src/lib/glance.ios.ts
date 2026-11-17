@@ -7,7 +7,7 @@ import TodayWidget from '@/widgets/TodayWidget';
 import { GlanceProps, TOGGLE_PREFIX } from '@/widgets/types';
 
 import { activityGlance, changesSincePush, currentGlance, glanceEntries, recordPushed } from './glance-common';
-import type { Completions, DoneChange } from './persist';
+import type { Completions, DoneChange } from './data';
 import type { Task } from './types';
 
 const ACTIVITY_URL = 'lifeflow://';

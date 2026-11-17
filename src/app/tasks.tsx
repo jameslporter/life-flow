@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { HeaderLink } from '@/components/HeaderButton';
 import { ReorderableList } from '@/components/ReorderableList';
 import { Screen } from '@/components/Screen';
-import { describeDays } from '@/lib/dates';
+import { describeSchedule } from '@/lib/schedule';
 import { useStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme';
 import { GROUPS, Task } from '@/lib/types';
@@ -21,7 +21,7 @@ export default function AllTasks() {
         <Pressable style={styles.row}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: theme.text, fontSize: 16 }}>{t.title}</Text>
-            <Text style={{ color: theme.muted, fontSize: 12 }}>{describeDays(t.days)}</Text>
+            <Text style={{ color: theme.muted, fontSize: 12 }}>{describeSchedule(t.schedule)}</Text>
           </View>
           <Text style={{ color: theme.muted, fontSize: 18 }}>›</Text>
         </Pressable>

@@ -1,13 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { Task } from './types';
-
-const STORAGE_KEY = 'life-flow/v1';
-
-/** dateKey -> ids of the tasks done that day. */
-export type Completions = Record<string, string[]>;
-
-export type DoneChange = { taskId: string; day: string; done: boolean };
+/** Where everything lived before the move to TinyBase. Read once to migrate, never written. */
+const LEGACY_KEY = 'life-flow/v1';
+/** Device-only settings. They never sync, because each device has its own reminders. */
+const SETTINGS_KEY = 'life-flow/settings';
 
 export type Settings = {
   /** Send a local notification each morning on days that have tasks. */
@@ -28,29 +24,35 @@ export const DEFAULT_SETTINGS: Settings = {
 /** A new install starts with the morning reminder and the Live Activity / pinned notification on. */
 export const NEW_USER_SETTINGS: Partial<Settings> = { reminderEnabled: true, liveActivityOnOpen: true };
 
-export type Persisted = { tasks: Task[]; completions: Completions; settings?: Partial<Settings> };
+/** The v1 data shape, kept only for the migration. */
+export type LegacyData = {
+  tasks: { id: string; title: string; group: string; days: number[]; createdAt: number }[];
+  completions: Record<string, string[]>;
+  settings?: Partial<Settings>;
+};
 
-/** Reads the saved data, or null when there is none or it can't be read. */
-export async function loadPersisted(): Promise<Persisted | null> {
+/** Reads the v1 blob, or null when there is none or it can't be read. */
+export async function loadLegacy(): Promise<LegacyData | null> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const raw = await AsyncStorage.getItem(LEGACY_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-export async function savePersisted(data: Persisted) {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+/** Reads device settings, carrying them over from v1 the first time. */
+export async function loadSettings(): Promise<Partial<Settings>> {
+  try {
+    const raw = await AsyncStorage.getItem(SETTINGS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // Fall through to the defaults below.
+  }
+  const legacy = await loadLegacy();
+  return legacy ? (legacy.settings ?? {}) : NEW_USER_SETTINGS;
 }
 
-export function applyDone(completions: Completions, changes: DoneChange[]): Completions {
-  const next = { ...completions };
-  for (const { taskId, day, done } of changes) {
-    const current = next[day] ?? [];
-    const has = current.includes(taskId);
-    if (done && !has) next[day] = [...current, taskId];
-    if (!done && has) next[day] = current.filter((x) => x !== taskId);
-  }
-  return next;
+export async function saveSettings(settings: Partial<Settings>) {
+  await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }

@@ -1,5 +1,5 @@
 // Web has no widget or Live Activity. See glance.ios.ts and glance.android.ts.
-import type { Completions, DoneChange } from './persist';
+import type { Completions, DoneChange } from './data';
 import type { Task } from './types';
 
 export const glanceSupported = false;

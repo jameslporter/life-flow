@@ -3,7 +3,7 @@ import * as TaskManager from 'expo-task-manager';
 import { AppState } from 'react-native';
 
 import { glanceChanges, pushWidget, syncActivity } from './glance';
-import { applyDone, loadPersisted, savePersisted } from './persist';
+import { applyDone, openDb, readCompletions, readTasks } from './data';
 
 const TASK = 'life-flow-refresh';
 
@@ -13,15 +13,20 @@ TaskManager.defineTask(TASK, async () => {
   try {
     // While the app is open, GlanceSync keeps everything up to date.
     if (AppState.currentState === 'active') return BackgroundTask.BackgroundTaskResult.Success;
-    const data = await loadPersisted();
-    if (!data) return BackgroundTask.BackgroundTaskResult.Success;
+    const { store, persister } = await openDb();
+    // Pick up anything saved since this runtime last read the database.
+    await persister.load();
 
     const changes = await glanceChanges();
-    const completions = applyDone(data.completions, changes);
-    if (changes.length > 0) await savePersisted({ ...data, completions });
+    if (changes.length > 0) {
+      applyDone(store, changes);
+      await persister.save();
+    }
 
-    await pushWidget(data.tasks, completions);
-    await syncActivity(data.tasks, completions);
+    const tasks = readTasks(store);
+    const completions = readCompletions(store);
+    await pushWidget(tasks, completions);
+    await syncActivity(tasks, completions);
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch (e) {
     console.warn('[life-flow] Background refresh failed', e);
