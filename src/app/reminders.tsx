@@ -5,6 +5,7 @@ import { Alert, Platform } from 'react-native';
 import { activityName, glanceSupported, syncActivity } from '@/lib/glance';
 import { remindersSupported, requestReminderPermission } from '@/lib/reminders';
 import { useStore } from '@/lib/store';
+import { useHomeWidget } from '@/lib/useHomeWidget';
 
 // Every 15 minutes from 5:00 to 11:45, stored as minutes after midnight.
 const TIMES = Array.from({ length: 28 }, (_, i) => 5 * 60 + i * 15);
@@ -22,6 +23,7 @@ function notify(title: string, message: string) {
 
 export default function Reminders() {
   const { settings, updateSettings, tasks, completions } = useStore();
+  const widget = useHomeWidget();
   const time = settings.reminderHour * 60 + settings.reminderMinute;
 
   const setReminder = async (on: boolean) => {
@@ -90,6 +92,19 @@ export default function Reminders() {
                   ? 'Shows the tasks for the current part of the day on the Lock Screen and Dynamic Island. '
                   : 'Pins the tasks for the current part of the day to your notifications so you can check them off there. ') +
                   'It also starts when you tap the morning reminder, and goes away once everything for today is done.'}
+              </Text>
+            </FieldGroup.SectionFooter>
+          </FieldGroup.Section>
+        )}
+
+        {widget.canAdd && (
+          <FieldGroup.Section title="Home screen widget">
+            <Button label="Add to home screen" variant="text" onPress={widget.add} />
+            <FieldGroup.SectionFooter>
+              <Text>
+                {widget.placed
+                  ? 'The widget is on your home screen. You can add another copy, for example on a second page.'
+                  : 'Shows the tasks for the current part of the day on your home screen so you can check them off there.'}
               </Text>
             </FieldGroup.SectionFooter>
           </FieldGroup.Section>
