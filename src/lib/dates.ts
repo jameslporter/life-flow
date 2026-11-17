@@ -41,3 +41,9 @@ export function describeDays(days: number[]): string {
 export function formatLongDate(d: Date): string {
   return d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 }
+
+/** Parses a 'YYYY-MM-DD' key as a local calendar day. */
+export function fromDateKey(key: string): Date {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}

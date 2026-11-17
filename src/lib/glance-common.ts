@@ -4,7 +4,8 @@ import type { GlanceEntry, GlanceProps, GlanceStyle } from '@/widgets/types';
 
 import { addDays, dateKey } from './dates';
 import { periodAt, periodEnd, periodStart } from './periods';
-import type { Completions, DoneChange } from './persist';
+import { occursOn } from './schedule';
+import type { Completions, DoneChange } from './data';
 import { darkTheme, lightTheme } from './theme';
 import { GROUPS, Group, Task } from './types';
 
@@ -30,7 +31,7 @@ export function propsFor(tasks: Task[], completions: Completions, day: Date, per
     color: lightTheme.groups[period],
     colorDark: darkTheme.groups[period],
     tasks: tasks
-      .filter((t) => t.group === period && t.days.includes(day.getDay()))
+      .filter((t) => t.group === period && occursOn(t, day))
       .map((t) => ({ id: t.id, title: t.title, done: done.includes(t.id) })),
     endsAt: periodEnd(day, period).getTime(),
   };

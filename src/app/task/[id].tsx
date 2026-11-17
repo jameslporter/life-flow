@@ -1,11 +1,17 @@
+import { Host, Picker } from '@expo/ui';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Screen } from '@/components/Screen';
+import { addDays, dateKey, fromDateKey } from '@/lib/dates';
+import { formatShortDate } from '@/lib/schedule';
 import { useStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme';
-import { ALL_WEEK, DAY_SHORT, DISPLAY_ORDER, GROUPS, Group, WEEKDAYS } from '@/lib/types';
+import { ALL_WEEK, DAY_SHORT, DISPLAY_ORDER, GROUPS, Group, Schedule, WEEKDAYS } from '@/lib/types';
+
+/** How far ahead a one-off task can be planned. */
+const ONE_OFF_DAYS_AHEAD = 120;
 
 function close() {
   if (router.canGoBack()) router.back();
@@ -28,6 +34,8 @@ export default function EditTask() {
   const [title, setTitle] = useState('');
   const [group, setGroup] = useState<Group>(initialGroup);
   const [days, setDays] = useState<number[]>(WEEKDAYS);
+  const [kind, setKind] = useState<Schedule['kind']>('weekly');
+  const [date, setDate] = useState(() => dateKey(new Date()));
   const [loadedId, setLoadedId] = useState<string | null>(null);
 
   // Fill the form once the task is available (storage loads asynchronously).
@@ -35,18 +43,29 @@ export default function EditTask() {
     if (existing && loadedId !== existing.id) {
       setTitle(existing.title);
       setGroup(existing.group);
-      setDays(existing.days);
+      setKind(existing.schedule.kind);
+      if (existing.schedule.kind === 'weekly') setDays(existing.schedule.days);
+      else setDate(existing.schedule.date);
       setLoadedId(existing.id);
     }
   }, [existing, loadedId]);
 
   const allWeek = ALL_WEEK.every((d) => days.includes(d));
   const weekdaysOnly = days.length === WEEKDAYS.length && WEEKDAYS.every((d) => days.includes(d));
-  const canSave = title.trim().length > 0 && days.length > 0;
+  const canSave = title.trim().length > 0 && (kind === 'once' || days.length > 0);
+
+  // Today through the next few months, plus the task's own date if it has passed.
+  const dateOptions = useMemo(() => {
+    const today = new Date();
+    const keys = Array.from({ length: ONE_OFF_DAYS_AHEAD }, (_, i) => dateKey(addDays(today, i)));
+    if (!keys.includes(date)) keys.unshift(date);
+    return keys;
+  }, [date]);
 
   const save = () => {
     if (!canSave) return;
-    const input = { title: title.trim(), group, days: [...days].sort() };
+    const schedule: Schedule = kind === 'weekly' ? { kind, days: [...days].sort() } : { kind, date };
+    const input = { title: title.trim(), group, schedule };
     if (existing) updateTask(existing.id, input);
     else addTask(input);
     close();
@@ -102,31 +121,65 @@ export default function EditTask() {
         </View>
 
         <View style={styles.field}>
-          <Text style={[styles.label, { color: theme.muted }]}>Repeats on</Text>
+          <Text style={[styles.label, { color: theme.muted }]}>When</Text>
           <View style={[styles.toggleRow, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Pressable
-              style={[styles.segment, weekdaysOnly && { backgroundColor: theme.primary }]}
-              onPress={() => setDays(WEEKDAYS)}>
-              <Text style={{ color: weekdaysOnly ? theme.primaryText : theme.text, fontWeight: '600' }}>Weekdays</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.segment, allWeek && { backgroundColor: theme.primary }]}
-              onPress={() => setDays(ALL_WEEK)}>
-              <Text style={{ color: allWeek ? theme.primaryText : theme.text, fontWeight: '600' }}>All week</Text>
-            </Pressable>
+            {(
+              [
+                ['weekly', 'Repeats'],
+                ['once', 'One day'],
+              ] as const
+            ).map(([k, label]) => (
+              <Pressable
+                key={k}
+                style={[styles.segment, kind === k && { backgroundColor: theme.primary }]}
+                onPress={() => setKind(k)}>
+                <Text style={{ color: kind === k ? theme.primaryText : theme.text, fontWeight: '600' }}>{label}</Text>
+              </Pressable>
+            ))}
           </View>
-          <View style={styles.chips}>
-            {DISPLAY_ORDER.map((d) => {
-              const active = days.includes(d);
-              return (
-                <Pressable key={d} onPress={() => toggleDay(d)} style={[chip(active), styles.dayChip]}>
-                  <Text style={{ color: active ? theme.primaryText : theme.text }}>{DAY_SHORT[d]}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          {days.length === 0 && <Text style={{ color: theme.danger }}>Pick at least one day.</Text>}
         </View>
+
+        {kind === 'weekly' ? (
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: theme.muted }]}>Repeats on</Text>
+            <View style={[styles.toggleRow, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Pressable
+                style={[styles.segment, weekdaysOnly && { backgroundColor: theme.primary }]}
+                onPress={() => setDays(WEEKDAYS)}>
+                <Text style={{ color: weekdaysOnly ? theme.primaryText : theme.text, fontWeight: '600' }}>Weekdays</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.segment, allWeek && { backgroundColor: theme.primary }]}
+                onPress={() => setDays(ALL_WEEK)}>
+                <Text style={{ color: allWeek ? theme.primaryText : theme.text, fontWeight: '600' }}>All week</Text>
+              </Pressable>
+            </View>
+            <View style={styles.chips}>
+              {DISPLAY_ORDER.map((d) => {
+                const active = days.includes(d);
+                return (
+                  <Pressable key={d} onPress={() => toggleDay(d)} style={[chip(active), styles.dayChip]}>
+                    <Text style={{ color: active ? theme.primaryText : theme.text }}>{DAY_SHORT[d]}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {days.length === 0 && <Text style={{ color: theme.danger }}>Pick at least one day.</Text>}
+          </View>
+        ) : (
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: theme.muted }]}>On</Text>
+            <View style={[styles.dateBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <Host matchContents>
+                <Picker selectedValue={date} onValueChange={setDate}>
+                  {dateOptions.map((k) => (
+                    <Picker.Item key={k} label={dayLabel(k)} value={k} />
+                  ))}
+                </Picker>
+              </Host>
+            </View>
+          </View>
+        )}
 
         <Pressable
           onPress={save}
@@ -152,6 +205,13 @@ export default function EditTask() {
   );
 }
 
+function dayLabel(key: string) {
+  const today = dateKey(new Date());
+  if (key === today) return `Today, ${formatShortDate(fromDateKey(key))}`;
+  if (key === dateKey(addDays(new Date(), 1))) return `Tomorrow, ${formatShortDate(fromDateKey(key))}`;
+  return formatShortDate(fromDateKey(key));
+}
+
 const styles = StyleSheet.create({
   field: { gap: 8, paddingTop: 4 },
   label: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
@@ -161,5 +221,6 @@ const styles = StyleSheet.create({
   dayChip: { minWidth: 52, alignItems: 'center' },
   toggleRow: { flexDirection: 'row', borderWidth: 1, borderRadius: 12, padding: 4, gap: 4 },
   segment: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 9 },
+  dateBox: { borderWidth: 1, borderRadius: 12, padding: 6, alignItems: 'flex-start' },
   button: { alignItems: 'center', padding: 16, borderRadius: 14 },
 });

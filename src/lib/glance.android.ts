@@ -6,7 +6,7 @@ import AndroidTodayWidget, { type AndroidWidgetProps } from '@/widgets/AndroidTo
 import { TICK_TARGET, type GlanceProps } from '@/widgets/types';
 
 import { activityGlance, changesSincePush, glanceEntries, recordPushed } from './glance-common';
-import type { Completions, DoneChange } from './persist';
+import type { Completions, DoneChange } from './data';
 import type { Task } from './types';
 
 const NOTIFICATION_ID = 'today';

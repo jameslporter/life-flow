@@ -65,7 +65,8 @@ export async function scheduleMorningReminders(tasks: Task[], settings: Settings
   }
 
   for (let day = 0; day < 7; day++) {
-    const dayTasks = tasks.filter((t) => t.days.includes(day));
+    // The reminder repeats weekly, so it counts weekly tasks only.
+    const dayTasks = tasks.filter((t) => t.schedule.kind === 'weekly' && t.schedule.days.includes(day));
     if (dayTasks.length === 0) continue;
     const morningCount = dayTasks.filter((t) => t.group === 'morning').length;
     await Notifications.scheduleNotificationAsync({

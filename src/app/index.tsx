@@ -4,7 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { HeaderLink } from '@/components/HeaderButton';
 import { Screen } from '@/components/Screen';
-import { addDays, dateKey, describeDays, formatLongDate, sameDay, startOfWeek } from '@/lib/dates';
+import { addDays, dateKey, formatLongDate, sameDay, startOfWeek } from '@/lib/dates';
+import { describeSchedule, occursOn } from '@/lib/schedule';
 import { useStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme';
 import { useToday } from '@/lib/useToday';
@@ -27,7 +28,7 @@ export default function Today() {
   const week = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   const dueToday = useMemo(
-    () => tasks.filter((t) => t.days.includes(selected.getDay())),
+    () => tasks.filter((t) => occursOn(t, selected)),
     [tasks, selected]
   );
   const doneCount = dueToday.filter((t) => isDone(t.id, key)).length;
@@ -128,7 +129,7 @@ export default function Today() {
                                 ]}>
                                 {t.title}
                               </Text>
-                              <Text style={{ color: theme.muted, fontSize: 12 }}>{describeDays(t.days)}</Text>
+                              <Text style={{ color: theme.muted, fontSize: 12 }}>{describeSchedule(t.schedule)}</Text>
                             </View>
                           </Pressable>
                           <Link href={{ pathname: '/task/[id]', params: { id: t.id } }} asChild>

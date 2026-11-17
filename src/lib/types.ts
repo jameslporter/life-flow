@@ -1,13 +1,25 @@
 export type Group = 'morning' | 'work' | 'evening';
 
+/**
+ * When a task shows up. Weekly tasks repeat on the given days (0 = Sunday ... 6 = Saturday);
+ * one-off tasks show only on their date ('YYYY-MM-DD', a local calendar day).
+ */
+export type Schedule = { kind: 'weekly'; days: number[] } | { kind: 'once'; date: string };
+
 export type Task = {
   id: string;
+  /** The list the task belongs to. Every task is in the Personal list until sharing arrives. */
+  listId: string;
   title: string;
   group: Group;
-  /** Days the task repeats on. 0 = Sunday ... 6 = Saturday. */
-  days: number[];
+  schedule: Schedule;
+  /** Fractional index that orders the task within its group. */
+  sortKey: string;
   createdAt: number;
 };
+
+/** What the person did with a task on a given day. 'open' means un-checked. */
+export type CheckState = 'done' | 'skipped' | 'open';
 
 export const GROUPS: { key: Group; label: string; emoji: string }[] = [
   { key: 'morning', label: 'Morning', emoji: '🌅' },
